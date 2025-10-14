@@ -30,13 +30,19 @@ struct MainView: View {
                 Group {
                     switch selectedTab {
                     case .templates:
-                           TemplatesView()
+                           TemplatesView(gardenDesigner: {
+                               selectedTab = .design
+                           }, designRecreator: {
+                               selectedTab = .recreate
+                           })
                     case .design:
                            DesignView()
                     case .recreate:
                            RecreateView()
                     case .tools:
-                           ToolsView()
+                        ToolsView(designRecreator: {
+                            selectedTab = .recreate
+                        })
                     case .history:
                            HistoryView()
                     }

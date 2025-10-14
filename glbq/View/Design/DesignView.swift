@@ -28,6 +28,9 @@ struct DesignView: View {
     @State private var selectedMainItem: PhotosPickerItem? = nil
     @State private var selectedMainUIImage: UIImage? = nil
     @State private var selectedMainImage: Image? = nil
+    
+    @State private var imageFrame: CGRect = .zero
+    @State private var imageSize: CGSize = .zero
 
 //    @State private var showCameraPickerInspiration = false
 //    @State private var showPhotoPickerInspiration = false
@@ -38,7 +41,7 @@ struct DesignView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
-                VStack(spacing: ScaleUtility.scaledSpacing(15)) {
+            
                     HStack {
                         
                         Text("Ai Garden Designer")
@@ -57,9 +60,9 @@ struct DesignView: View {
                             }
                     }
                     .padding(.horizontal, ScaleUtility.scaledSpacing(15))
-                    .padding(.top, ScaleUtility.scaledSpacing(62))
+                    .padding(.top, ScaleUtility.scaledSpacing(59))
                     
-                }
+                
                 
                 ScrollView {
                     
@@ -69,14 +72,14 @@ struct DesignView: View {
                     
                     VStack(spacing: ScaleUtility.scaledSpacing(20)) {
                         
-                        if let image = selectedMainImage {
-                            ImageCard(image: image) {
-                                selectedMainImage = nil
-                                selectedMainUIImage = nil
-                            }
+                        if let image = selectedMainUIImage {
+                            imageCanvasView(selectedImage: image)
+
                         } else {
                             
-                            UploadContainer(onClick: {
+                            UploadContainer(
+                                title:"Upload Garden Photo",
+                                onClick: {
                                 showUploadSheet = true
                             })
                             
@@ -172,16 +175,8 @@ struct DesignView: View {
                 showSheet: $showUploadSheet,
                 onCameraTap: {
                     showUploadSheet = false
-                    Task { @MainActor in
-                        if await CameraAuth.requestIfNeeded() {
-                            try? await Task.sleep(nanoseconds: 300_000_000)
-                            showCameraPickerMain = true
-    
-                        } else {
-                            cameraDeniedOnce = (CameraAuth.status() != .notDetermined)
-                            try? await Task.sleep(nanoseconds: 300_000_000)
-                            showCameraPermissionAlert = true
-                        }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showCameraPickerMain = true
                     }
                 },
                 onGalleryTap: {
@@ -192,13 +187,67 @@ struct DesignView: View {
                     }
                 }
             )
-            .presentationDetents([.height( isIPad ? 434.81137 : 334.81137)])
+            .presentationDetents([.height( isIPad ? 434.81137 : 320)])
             .presentationCornerRadius(25)
             .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $showCameraPickerMain) {
-            CameraPicker(image: $selectedMainImage, uiImage: $selectedMainUIImage)
+        .fullScreenCover(isPresented: $showCameraPickerMain) {
+            ImagePicker(sourceType: .camera) { image in
+                selectedMainUIImage = image
+     
+            }
         }
         .photosPicker(isPresented: $showPhotoPickerMain, selection: $selectedMainItem, matching: .images)
+    }
+    
+    
+    private func imageCanvasView(selectedImage: UIImage) -> some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .topTrailing) {
+                Image(uiImage: selectedImage)
+                    .resizable()
+                    .scaledToFit()
+                    .background(
+                        GeometryReader { imageGeometry -> Color in
+                            let frame = imageGeometry.frame(in: .local)
+                            DispatchQueue.main.async {
+                                self.imageFrame = frame
+                                self.imageSize = selectedImage.size
+                            }
+                            return Color.clear
+                        }
+                    )
+                    .cornerRadius(15)
+                
+                        //Remove Image
+                        Button{
+                            selectedMainUIImage = nil
+
+                        }label: {
+                            Image(.crossIcon2)
+                                .resizable()
+                                .frame(
+                                    width: ScaleUtility.scaledValue(12),
+                                    height: ScaleUtility.scaledValue(12)
+                                )
+                                .padding(ScaleUtility.scaledSpacing(9))
+                                .background {
+                                    Circle()
+                                        .fill(Color.appBlack.opacity(0.5))
+                                }
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.appBlack.opacity(0.2), lineWidth: 1)
+                                )
+                        
+                        }
+                            .offset(x: ScaleUtility.scaledSpacing(-10), y: ScaleUtility.scaledSpacing(10))
+                            .zIndex(1)
+                    
+            }
+            .frame(width: geometry.size.width, height: min(geometry.size.height, ScaleUtility.scaledValue(345)))
+        }
+        .padding(.horizontal, ScaleUtility.scaledSpacing(15))
+        .frame(height: ScaleUtility.scaledValue(245))
     }
 }

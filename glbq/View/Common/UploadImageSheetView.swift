@@ -106,7 +106,7 @@ struct UploadImageSheetView: View {
             
         }
         .padding(.horizontal,ScaleUtility.scaledSpacing(20))
-        .padding(.top,ScaleUtility.scaledSpacing(15))
+
    
     }
 }

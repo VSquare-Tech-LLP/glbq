@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 struct UploadContainer: View {
-    
+    var title: String
     var onClick: () -> Void
     @State private var uploadButtonPressed = false
     
@@ -26,7 +26,7 @@ struct UploadContainer: View {
                     .frame(width: ScaleUtility.scaledValue(50), height: ScaleUtility.scaledValue(50))
                     .opacity(0.9)
                 
-                Text("Upload Garden Photo")
+                Text(title)
                     .font(FontManager.generalSansRegularFont(size: .scaledFontSize(16)))
                     .multilineTextAlignment(.center)
                     .foregroundColor(Color.accent)

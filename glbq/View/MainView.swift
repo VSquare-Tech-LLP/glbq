@@ -44,7 +44,9 @@ struct MainView: View {
                             selectedTab = .recreate
                         })
                     case .history:
-                           HistoryView()
+                        HistoryView(startDesign: {
+                            selectedTab = .design
+                        })
                     }
                 }
                 .frame(maxWidth:.infinity)

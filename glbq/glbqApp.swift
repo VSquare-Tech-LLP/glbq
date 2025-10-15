@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct glbqApp: App {
+    @StateObject private var userSettings = UserSettings()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(userSettings)
         }
     }
 }

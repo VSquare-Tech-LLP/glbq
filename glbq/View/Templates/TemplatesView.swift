@@ -12,14 +12,14 @@ import SwiftUI
 struct TemplatesView: View {
     
     @State var selectedOption: String = "Luxury"
-    
+    @State  var navigateToSettings: Bool = false
     @State private var navigateToTemplateDesign = false
     @State private var selectedTemplate = ""
     @State private var selectedTemplateIndex = 0
     
     var gardenDesigner: () -> Void
     var designRecreator: () -> Void
-    
+
     var body: some View {
         VStack(spacing: 0) {
             
@@ -29,6 +29,8 @@ struct TemplatesView: View {
                     gardenDesigner()
                 }, designRecreator: {
                     designRecreator()
+                },settingsAction: {
+                    navigateToSettings = true
                 })
                 
                 TemplatesFilter(selectedOption: $selectedOption)
@@ -91,6 +93,11 @@ struct TemplatesView: View {
                 onBack: { navigateToTemplateDesign = false },
                 index: selectedTemplateIndex
             )
+        }
+        .navigationDestination(isPresented: $navigateToSettings) {
+            SettingsView(onBack: {
+                navigateToSettings = false
+            })
         }
     }
 }

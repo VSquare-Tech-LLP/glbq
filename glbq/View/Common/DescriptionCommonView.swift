@@ -64,7 +64,7 @@ struct DescriptionCommonView: View {
                 }
                 
             }
-            .padding(.leading, ScaleUtility.scaledSpacing(10))
+            .padding(.leading, ScaleUtility.scaledSpacing(15))
             .frame(height: ScaleUtility.scaledValue(83))
             .frame(maxWidth: .infinity)
             .background(Color.primaryApp) // <- ensure the dot is here

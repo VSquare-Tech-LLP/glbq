@@ -1,22 +1,16 @@
 //
-//  RecreateView.swift
+//  AddObjectsView.swift
 //  glbq
 //
-//  Created by Purvi Sancheti on 11/10/25.
+//  Created by Purvi Sancheti on 14/10/25.
 //
 
 import Foundation
-import SwiftUI
 import PhotosUI
+import SwiftUI
 
-
-enum UploadType { case main, reference }
-
-
-struct RecreateView: View {
-    
-    @StateObject private var viewModel = GenerationViewModel()
-    
+struct AddObjectsView: View {
+    @StateObject private var keyboard = KeyboardResponder()
     let impactfeedback = UIImpactFeedbackGenerator(style: .medium)
     
     @State private var showUploadSheet = false
@@ -46,104 +40,104 @@ struct RecreateView: View {
     
     @State private var activeUploadType: UploadType? = nil
     
-    @State var isObjectSheet: Bool = false
+    @FocusState private var withFocused: Bool
+    @State var objToAddText: String = ""
     
-    @State var navigateToProcessView: Bool = false
-    
-    @State private var isRecreateLoading = false
-    @State private var showToast = false
-    @State private var toastMessage = ""
-    
+    var onBack: () -> Void
     var body: some View {
-        
-     ZStack(alignment: .bottom) {
+        ZStack(alignment: .bottom) {
             
             VStack(spacing: 0) {
                 
-                HStack {
-                    
-                    Text("Recreate from Reference")
-                        .font(FontManager.generalSansMediumFont(size: .scaledFontSize(22)))
-                        .foregroundColor(Color.appBlack)
-                    
-                    Spacer()
-                    
-                    Image(.crownIcon)
-                        .resizable()
-                        .frame(width: ScaleUtility.scaledValue(24), height: ScaleUtility.scaledValue(24))
-                        .padding(.all, ScaleUtility.scaledSpacing(9))
-                        .background {
-                            Circle()
-                                .fill(.primaryApp)
-                        }
-                }
-                .padding(.horizontal, ScaleUtility.scaledSpacing(15))
-                .padding(.top, ScaleUtility.scaledSpacing(59))
+                HeaderView(highPadding: true,title: "Add Objects",onBack: {
+                    onBack()
+                })
                 
                 
-                ScrollView {
-                    
-                    Spacer()
-                        .frame(height: ScaleUtility.scaledValue(25))
-                    
-                    VStack(spacing: ScaleUtility.scaledSpacing(20)) {
+                ScrollViewReader { scrollView in
+                    ScrollView {
                         
-                        if let image = selectedMainUIImage {
-                            imageCanvasView(selectedImage: image,onRemove: {
-                                selectedMainUIImage = nil
-                            })
+                        Spacer()
+                            .frame(height: ScaleUtility.scaledValue(20))
+                        
+                        VStack(spacing: ScaleUtility.scaledSpacing(20)) {
                             
-                        } else {
+                            if let image = selectedMainUIImage {
+                                imageCanvasView(selectedImage: image)
+                                
+                            } else {
+                                
+                                UploadContainer(
+                                    title:"Upload Garden Photo",
+                                    onClick: {
+                                        activeUploadType = .main  // ✅ Set the type!
+                                        showUploadSheet = true
+                                    })
+                                
+                            }
                             
-                            UploadContainer(
-                                title:"Upload Garden Photo",
-                                onClick: {
-                                    isObjectSheet = false
-                                    activeUploadType = .main  // ✅ Set the type!
-                                    showUploadSheet = true
-                                   
-                                })
+                            // Text
+                            Text("Add Photo of the Object to add")
+                                .font(FontManager.generalSansMediumFont(size: .scaledFontSize(18)))
+                                .foregroundColor(.black)
+                                .frame(maxWidth: .infinity,alignment: .leading)
+                                .padding(.leading, ScaleUtility.scaledValue(15))
+                            
+                            if let image = selectedReferenceUIImage {
+                                imageCanvasView(selectedImage: image)
+                                
+                            } else {
+                                
+                                UploadContainer(
+                                    title:"Upload Reference Photo",
+                                    onClick: {
+                                        activeUploadType = .reference  // ✅ Set the type!
+                                        showUploadSheet = true
+                                    })
+                                
+                            }
+                            
+                            
+                            DescriptionCommonView(
+                                title: "Describe Object to add",
+                                subtitle: "Upload above or describe object and placement here..",
+                                descriptionText: $objToAddText,
+                                isInputFocused: $withFocused
+                            )
                             
                         }
                         
-                        // Text
-                        Text("Add Reference Garden Photo")
-                            .font(FontManager.generalSansMediumFont(size: .scaledFontSize(18)))
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity,alignment: .leading)
-                            .padding(.leading, ScaleUtility.scaledValue(15))
-                        
-                        if let image = selectedReferenceUIImage {
-                            imageCanvasView(selectedImage: image,onRemove: {
-
-                                selectedReferenceUIImage = nil
-                            })
-                            
-                        } else {
-                            
-                            UploadContainer(
-                                title:"Upload Reference Photo",
-                                onClick: {
-                                    isObjectSheet = true
-                                    activeUploadType = .reference  // ✅ Set the type!
-                                    showUploadSheet = true
-                                  
-                                })
-                            
+                        if keyboard.currentHeight > 0 {
+                            Spacer()
+                                .frame(height: ScaleUtility.scaledValue(380))
+                        }
+                        else {
+                            Spacer()
+                                .frame(height: ScaleUtility.scaledValue(150))
                         }
                         
+                        Color.clear
+                            .frame(maxWidth: .infinity)
+                            .frame(height: ScaleUtility.scaledValue(1))
+                            .id("ScrollToBottom")
                         
                     }
-                    
-                    Spacer()
-                        .frame(height: ScaleUtility.scaledValue(200))
-                    
+                    .onChange(of: keyboard.currentHeight) { height in
+                        if height > 0 {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                withAnimation(.easeOut(duration: 0.25)) {
+                                    scrollView.scrollTo("ScrollToBottom", anchor: .bottom)
+                                }
+                            }
+                        }
+                    }
                 }
-                
-                
             }
             
-            ZStack {
+            Spacer()
+            
+            
+            ZStack(alignment: .bottom) {
                 
                 Rectangle()
                     .fill(
@@ -157,9 +151,11 @@ struct RecreateView: View {
                             endPoint: .top
                         )
                     )
-                    .frame(height: 100)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 170)
                     .allowsHitTesting(true)
-              
+                
+                
                 
                 
                 Button {
@@ -167,10 +163,9 @@ struct RecreateView: View {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         impactfeedback.impactOccurred()
                     }
-                    navigateToProcessView = true 
                     
                 } label: {
-                    Text("Recreate")
+                    Text("Create Now")
                         .font(FontManager.generalSansMediumFont(size: .scaledFontSize(18)))
                         .multilineTextAlignment(.center)
                         .foregroundColor(Color.primaryApp)
@@ -179,72 +174,20 @@ struct RecreateView: View {
                         .background(Color.accent)
                         .cornerRadius(10)
                         .padding(.horizontal,ScaleUtility.scaledSpacing(15))
-                        .padding(.bottom, ScaleUtility.scaledSpacing(100))
-                    
+                        .padding(.bottom,ScaleUtility.scaledSpacing(40))
                 }
-                .zIndex(1)
-                
             }
-            
+            .zIndex(1)
+        
+      
         }
+        .navigationBarHidden(true)
         .background {
             Image(.appBg)
                 .resizable()
                 .frame(maxWidth: .infinity,maxHeight: .infinity)
         }
         .ignoresSafeArea(.all)
-        .alert(isPresented: $showToast) {
-            Alert(
-                title: Text("Error"),
-                message: Text(toastMessage),
-                dismissButton: .default(Text("OK")) {
-                    showToast = false
-                }
-            )
-        }
-        // NAV → ProcessingView (passes the same viewModel)
-        .navigationDestination(isPresented: $navigateToProcessView) {
-            ProcessingView(viewModel: viewModel,
-            onBack: {
-         
-                // if ProcessingView sent us back due to an error, show a toast
-                if viewModel.shouldReturnToRecreate {
-                    toastMessage = viewModel.errorMessage ?? "Generation failed. Please try again."
-//                    showPopUp = false
-                    navigateToProcessView = false
-                    isRecreateLoading = false
-                    withAnimation { showToast = true }
-           
-                    viewModel.shouldReturnToRecreate = false
-                }
-                else {
-//                    showPopUp = false
-                    navigateToProcessView = false
-                    isRecreateLoading = false
-                }
-            },  onAppear: {
-                Task {
-                    guard let venue = selectedMainUIImage,
-                          let reference = selectedReferenceUIImage else {
-                        // no images? bounce back
-                        isRecreateLoading = false
-                        viewModel.shouldReturnToRecreate = true
-                        return
-                    }
-                    
-                    viewModel.currentSource = "RecreateView"
-                    viewModel.currentPrompt = "Transform the provided garden photo using the reference garden's design, landscaping, and plant arrangements. Keep the original garden's space and structure intact while applying the reference garden's style, plants, and layout."
-                    
-                    let started = await viewModel.startJob(venueImage: venue, referenceImage: reference)
-                    if started {
-                        await viewModel.pollUntilReady()
-                    } else {
-                        // start failed → send us back and show toast
-                        viewModel.shouldReturnToRecreate = true
-                    }
-                }
-            })
-        }
         .onChange(of: selectedMainItem) { _, newItem in
             guard let newItem else { return }
             Task {
@@ -273,7 +216,7 @@ struct RecreateView: View {
         }
         .sheet(isPresented: $showUploadSheet) {
             UploadImageSheetView(
-                isObjectSheet: $isObjectSheet,
+                isObjectSheet: true,
                 showSheet: $showUploadSheet,
                 onCameraTap: {
                     showUploadSheet = false
@@ -325,7 +268,7 @@ struct RecreateView: View {
         .photosPicker(isPresented: $showPhotoPickerReference, selection: $selectedReferenceItem, matching: .images)
     }
     
-    private func imageCanvasView(selectedImage: UIImage,onRemove: @escaping () -> Void) -> some View {
+    private func imageCanvasView(selectedImage: UIImage) -> some View {
         GeometryReader { geometry in
             ZStack(alignment: .topTrailing) {
                 Image(uiImage: selectedImage)
@@ -345,8 +288,8 @@ struct RecreateView: View {
                 
                         //Remove Image
                         Button{
-                            onRemove()
-                           
+                            selectedMainUIImage = nil
+
                         }label: {
                             Image(.crossIcon2)
                                 .resizable()

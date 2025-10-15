@@ -9,9 +9,36 @@ import Foundation
 import SwiftUI
 
 struct UploadImageSheetView: View {
+    @Binding private var isObjectSheet: Bool
     @Binding var showSheet: Bool
     var onCameraTap: () -> Void
     var onGalleryTap: () -> Void
+    
+    // Initializer for Binding (for RecreateView)
+    init(
+        isObjectSheet: Binding<Bool>,
+        showSheet: Binding<Bool>,
+        onCameraTap: @escaping () -> Void,
+        onGalleryTap: @escaping () -> Void
+    ) {
+        self._isObjectSheet = isObjectSheet
+        self._showSheet = showSheet
+        self.onCameraTap = onCameraTap
+        self.onGalleryTap = onGalleryTap
+    }
+    
+    // Initializer for constant Bool (for RemoveObjectsView)
+    init(
+        isObjectSheet: Bool,
+        showSheet: Binding<Bool>,
+        onCameraTap: @escaping () -> Void,
+        onGalleryTap: @escaping () -> Void
+    ) {
+        self._isObjectSheet = .constant(isObjectSheet)
+        self._showSheet = showSheet
+        self.onCameraTap = onCameraTap
+        self.onGalleryTap = onGalleryTap
+    }
 
     var body: some View {
         
@@ -32,17 +59,17 @@ struct UploadImageSheetView: View {
                 
                 HStack(spacing: ScaleUtility.scaledSpacing(4)) {
                     
-                    Image(.reference1)
+                    Image(isObjectSheet ? .object1 : .reference1)
                         .resizable()
                         .frame(width:  isIPad ? ScaleUtility.scaledValue(163) : ScaleUtility.scaledValue(109),
                                height:  isIPad ? ScaleUtility.scaledValue(114) : ScaleUtility.scaledValue(76))
                     
-                    Image(.reference2)
+                    Image(isObjectSheet ? .objec2 :.reference2)
                         .resizable()
                         .frame(width:  isIPad ? ScaleUtility.scaledValue(163) : ScaleUtility.scaledValue(109),
                                height:  isIPad ? ScaleUtility.scaledValue(114) : ScaleUtility.scaledValue(76))
                     
-                    Image(.reference3)
+                    Image(isObjectSheet ? .objec3 : .reference3)
                         .resizable()
                         .frame(width:  isIPad ? ScaleUtility.scaledValue(163) : ScaleUtility.scaledValue(109),
                                height:  isIPad ? ScaleUtility.scaledValue(114) : ScaleUtility.scaledValue(76))

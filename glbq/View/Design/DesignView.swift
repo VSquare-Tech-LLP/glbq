@@ -11,6 +11,7 @@ import PhotosUI
 
 struct DesignView: View {
     
+    @StateObject private var viewModel = GenerationViewModel()
     let impactfeedback = UIImpactFeedbackGenerator(style: .medium)
     
     @State var selectedType: String = ""
@@ -31,12 +32,18 @@ struct DesignView: View {
     
     @State private var imageFrame: CGRect = .zero
     @State private var imageSize: CGSize = .zero
+    
+    @State private var showToast = false
+    @State private var toastMessage = ""
+    @State private var isGenerating = false
 
 //    @State private var showCameraPickerInspiration = false
 //    @State private var showPhotoPickerInspiration = false
 //    @State private var selectedInspirationItem: PhotosPickerItem? = nil
 //    @State private var selectedInspirationUIImage: UIImage? = nil
 //    @State private var selectedInspirationImage: Image? = nil
+    
+    @State private var navigateToProcessView = false
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -90,7 +97,9 @@ struct DesignView: View {
                             
                             GardenTypeView(selectedType: $selectedType)
                             
-                            DesignThemesView(selectedTheme: $selectedTheme)
+                            DesignThemesView(text:"Design Theme",
+                                             isOptional: false,
+                                             selectedTheme: $selectedTheme)
                             
                             addObjectView(selectedObjects: $selectedObjects)
                         }
@@ -129,6 +138,7 @@ struct DesignView: View {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         impactfeedback.impactOccurred()
                     }
+                    navigateToProcessView = true
                     
                 } label: {
                     Text("Create Now")
@@ -143,6 +153,7 @@ struct DesignView: View {
                         .padding(.bottom, ScaleUtility.scaledSpacing(100))
                     
                 }
+                .disabled(selectedMainUIImage == nil || selectedType.isEmpty || selectedTheme.isEmpty)
                 .zIndex(1)
                 
             }
@@ -154,6 +165,62 @@ struct DesignView: View {
                 .frame(maxWidth: .infinity,maxHeight: .infinity)
         }
         .ignoresSafeArea(.all)
+        .navigationDestination(isPresented: $navigateToProcessView) {
+            ProcessingView(
+                viewModel: viewModel,
+                onBack: {
+              
+                    if viewModel.shouldReturnToRecreate {
+                        toastMessage = viewModel.errorMessage ?? "Generation failed. Please try again."
+//                        showPopUp = false
+                        navigateToProcessView = false
+                        isGenerating = false
+                        withAnimation { showToast = true }
+                
+                        viewModel.shouldReturnToRecreate = false
+                    }
+                    else {
+//                        showPopUp = false
+                        navigateToProcessView = false
+                        isGenerating = false
+                    }
+                },
+                onAppear: {
+                    Task {
+                        guard let ui = selectedMainUIImage else {
+                            isGenerating = false
+                            viewModel.shouldReturnToRecreate = true
+                            return
+                        }
+                        let prompt = PromptBuilder.buildPrompt(
+                            typeName: selectedType,
+                            themeName: selectedTheme,
+                            objectNames: selectedObjects
+                        )
+                        
+//                        viewModel.currentKind = .generated
+                        viewModel.currentSource = "DesignView"
+                        viewModel.currentPrompt = prompt
+                        
+                        let started = await viewModel.startDesignJob(image: ui, prompt: prompt)
+                        if started {
+                            await viewModel.pollUntilReady()
+                        } else {
+                            viewModel.shouldReturnToRecreate = true
+                        }
+                    }
+                }
+            )
+        }
+        .alert(isPresented: $showToast) {
+            Alert(
+                title: Text("Error"),
+                message: Text(toastMessage),
+                dismissButton: .default(Text("OK")) {
+                    showToast = false
+                }
+            )
+        }
         .onChange(of: selectedMainItem) { _, newItem in
             guard let newItem else { return }
             Task {
@@ -172,6 +239,7 @@ struct DesignView: View {
         }
         .sheet(isPresented: $showUploadSheet) {
             UploadImageSheetView(
+                isObjectSheet: false,
                 showSheet: $showUploadSheet,
                 onCameraTap: {
                     showUploadSheet = false

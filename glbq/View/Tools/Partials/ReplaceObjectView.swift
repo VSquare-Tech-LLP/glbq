@@ -10,12 +10,14 @@ import SwiftUI
 import PhotosUI
 
 struct ReplaceObjectsView: View {
+    @StateObject private var viewModel = GenerationViewModel()
     @StateObject private var keyboard = KeyboardResponder()
     
     var onBack: () -> Void
     let impactfeedback = UIImpactFeedbackGenerator(style: .medium)
     
     @State private var showUploadSheet = false
+    @State private var navigateToProcessView = false
     
     @State private var showCameraPermissionAlert = false
     @State private var cameraDeniedOnce = false
@@ -34,6 +36,11 @@ struct ReplaceObjectsView: View {
     @State var objToReplaceText: String = ""
     @State var objToReplaceWithText: String = ""
     
+    // Toast states
+    @State private var showToast = false
+    @State private var toastMessage = ""
+
+    @State private var showValidationAlert = false
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -140,19 +147,25 @@ struct ReplaceObjectsView: View {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         impactfeedback.impactOccurred()
                     }
+                    if !canProceed {
+                        showValidationAlert = true
+                    } else {
+                        navigateToProcessView = true
+                    }
                     
                 } label: {
                     Text("Replace Now")
                         .font(FontManager.generalSansMediumFont(size: .scaledFontSize(18)))
                         .multilineTextAlignment(.center)
-                        .foregroundColor(Color.primaryApp)
+                        .foregroundColor(!canProceed ?  Color.appBlack.opacity(0.2)  : Color.primaryApp)
                         .padding(.vertical,ScaleUtility.scaledSpacing(18))
                         .frame(maxWidth: .infinity)
-                        .background(Color.accent)
+                        .background(!canProceed ? Color.diableApp : Color.accent)
                         .cornerRadius(10)
                         .padding(.horizontal,ScaleUtility.scaledSpacing(15))
                         .padding(.bottom,ScaleUtility.scaledSpacing(40))
                 }
+//                .disabled(!canProceed)
             }
             .zIndex(1)
         }
@@ -163,6 +176,66 @@ struct ReplaceObjectsView: View {
                 .frame(maxWidth: .infinity,maxHeight: .infinity)
         }
         .ignoresSafeArea(.all)
+        .alert(isPresented: $showToast) {
+            Alert(
+                title: Text("Error"),
+                message: Text("Unable to process. Try again with different prompt or image."),
+                dismissButton: .default(Text("OK")) {
+                    showToast = false
+                }
+            )
+        }
+        // MARK: - Navigation
+        .navigationDestination(isPresented: $navigateToProcessView) {
+            ProcessingView(
+                viewModel: viewModel,
+                onBack: {
+              
+                    if viewModel.shouldReturnToRecreate {
+                        toastMessage = viewModel.errorMessage ?? "Unable to Process Prompt."
+//                        showPopUp = false
+                        navigateToProcessView = false
+                        withAnimation { showToast = true }
+                 
+                        viewModel.shouldReturnToRecreate = false
+                    }
+                    else {
+//                        showPopUp = false
+                        navigateToProcessView = false
+                        
+                    }
+                },
+                onAppear: {
+                    Task {
+                        guard let image = selectedMainUIImage else {
+                            viewModel.shouldReturnToRecreate = true
+                            return
+                        }
+
+                        // Inside the ProcessingView onAppear Task
+                        let prompt = PromptBuilder.buildObjectReplacementPrompt(
+                            replace: objToReplaceText,
+                            with: objToReplaceWithText,
+                            gardenContext: nil,
+                            keepBackground: true
+                        )
+                        
+//                        viewModel.currentKind = .edited
+                        viewModel.currentSource = "Replace Objects"
+                        viewModel.currentPrompt = prompt
+                        
+                        let started = await viewModel.startDesignJob(image: image, prompt: prompt)
+
+                        if started {
+                            await viewModel.pollUntilReady()
+                        } else {
+                            viewModel.shouldReturnToRecreate = true
+                        }
+                    }
+                }
+
+            )
+        }
         .onChange(of: selectedMainItem) { _, newItem in
             guard let newItem else { return }
             Task {
@@ -185,8 +258,17 @@ struct ReplaceObjectsView: View {
                 showSheet: $showUploadSheet,
                 onCameraTap: {
                     showUploadSheet = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        showCameraPickerMain = true
+
+                    Task { @MainActor in
+                        if await CameraAuth.requestIfNeeded() {
+                            try? await Task.sleep(nanoseconds: 300_000_000)
+                            showCameraPickerMain = true
+                            
+                        } else {
+                            cameraDeniedOnce = (CameraAuth.status() != .notDetermined)
+                            try? await Task.sleep(nanoseconds: 300_000_000)
+                            showCameraPermissionAlert = true
+                        }
                     }
                 },
                 onGalleryTap: {
@@ -198,8 +280,19 @@ struct ReplaceObjectsView: View {
                 }
             )
             .presentationDetents([.height( isIPad ? 434.81137 : 320)])
-            .presentationCornerRadius(25)
+            .presentationCornerRadius(20)
             .presentationDragIndicator(.visible)
+        }
+        .alert("Missing Information", isPresented: $showValidationAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            if selectedMainUIImage == nil {
+                Text("Please upload a garden photo to continue.")
+            } else if objToReplaceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Text("Please describe the object you want to replace.")
+            } else {
+                Text("Please describe what you want to replace it with.")
+            }
         }
         .fullScreenCover(isPresented: $showCameraPickerMain) {
             ImagePicker(sourceType: .camera) { image in
@@ -209,6 +302,12 @@ struct ReplaceObjectsView: View {
         }
         .photosPicker(isPresented: $showPhotoPickerMain, selection: $selectedMainItem, matching: .images)
         
+    }
+    
+    private var canProceed: Bool {
+        selectedMainUIImage != nil &&
+        !objToReplaceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !objToReplaceWithText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
     private func imageCanvasView(selectedImage: UIImage) -> some View {

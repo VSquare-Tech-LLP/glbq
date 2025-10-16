@@ -79,6 +79,13 @@ struct ResultView: View {
                         .padding(.horizontal, ScaleUtility.scaledSpacing(15))
                 }
                 
+                FooterView(onSave: {
+                    saveImageToGallery()
+                }, onShare: {
+                    shareImage()
+                }, generatedImage: $generatedImage,
+                    buttonDisabled: $buttonDisabled)
+                
             }
             
             Spacer()
@@ -120,4 +127,82 @@ struct ResultView: View {
             )
         }
     }
+    
+    
+    // Function to save image to gallery
+    private func saveImageToGallery() {
+        guard let urlStr = viewModel.resultData?.bestImageURL, let url = URL(string: urlStr) else {
+            toastMessage = "Failed to retrieve image."
+            showToast = true
+            return
+        }
+
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let data = data, let image = UIImage(data: data) {
+                PHPhotoLibrary.requestAuthorization { status in
+                    if status == .authorized {
+                        PHPhotoLibrary.shared().performChanges({
+                            PHAssetCreationRequest.forAsset().addResource(with: .photo, data: data, options: nil)
+                        }) { success, error in
+                            if success {
+                                DispatchQueue.main.async {
+                                    toastMessage = "Image saved to gallery!"
+                                    showToast = true
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                        showToast = false
+                                    }
+                                }
+                            } else {
+                                DispatchQueue.main.async {
+                                    toastMessage = "Failed to save image."
+                                    showToast = true
+                                }
+                            }
+                        }
+                    } else if status == .denied || status == .restricted {
+                        DispatchQueue.main.async {
+                            if !permissionDeniedOnce {
+                                permissionDeniedOnce = true
+                                showPermissionAlert = true
+                            } else {
+                                toastMessage = "Permission denied. Please enable gallery access in settings."
+                                showToast = true
+                            }
+                        }
+                    }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    toastMessage = "Error loading image."
+                    showToast = true
+                }
+            }
+        }.resume()
+    }
+
+    // Function to share image
+    private func shareImage() {
+        guard let urlStr = viewModel.resultData?.bestImageURL, let url = URL(string: urlStr) else {
+            toastMessage = "Failed to retrieve image."
+            showToast = true
+            return
+        }
+
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let data = data, let image = UIImage(data: data) {
+                DispatchQueue.main.async {
+                    let activityViewController = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+                    if let rootVC = UIApplication.shared.windows.first?.rootViewController {
+                        rootVC.present(activityViewController, animated: true, completion: nil)
+                    }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    toastMessage = "Error sharing image."
+                    showToast = true
+                }
+            }
+        }.resume()
+    }
+    
 }

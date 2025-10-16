@@ -92,30 +92,30 @@ final class GenerationViewModel: ObservableObject {
         }
     }
     
-//    // MARK: - Add-to-Event flow (venue + optional object image)
-//    func startAddToEventJob(venue: UIImage, object: UIImage?, prompt: String) async -> Bool {
-//        errorMessage = nil
-//        shouldReturnToRecreate = false
-//        do {
-//            let resp: ImageUploadResponse
-//            if let object = object {
-//                // Two images: venue first, object second
-//                resp = try await network.uploadImages(venueImage: venue, referenceImage: object, prompt: prompt)
-//            } else {
-//                // One image: just the venue with descriptive prompt
-//                resp = try await network.uploadDesign(image: venue, prompt: prompt)
-//            }
-//            guard resp.status, let id = resp.data?.id else {
-//                errorMessage = "Failed to start processing."
-//                return false
-//            }
-//            taskID = id
-//            return true
-//        } catch {
-//            errorMessage = error.localizedDescription
-//            return false
-//        }
-//    }
+//    // MARK: - Add-Object flow (venue + optional object image)
+    func startAddObjectJob(venue: UIImage, object: UIImage?, prompt: String) async -> Bool {
+        errorMessage = nil
+        shouldReturnToRecreate = false
+        do {
+            let resp: ImageUploadResponse
+            if let object = object {
+                // Two images: venue first, object second
+                resp = try await network.uploadImages(venueImage: venue, referenceImage: object, prompt: prompt)
+            } else {
+                // One image: just the venue with descriptive prompt
+                resp = try await network.uploadDesign(image: venue, prompt: prompt)
+            }
+            guard resp.status, let id = resp.data?.id else {
+                errorMessage = "Failed to start processing."
+                return false
+            }
+            taskID = id
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
 
     func pollUntilReady(
             pollInterval: TimeInterval = 15,
@@ -149,36 +149,34 @@ final class GenerationViewModel: ObservableObject {
                         let prompt = self.currentPrompt
                         let source = self.currentSource
 
-//                        Task.detached {
-//                            let store = LocalImageStore.shared
-//                            var localURLs: [URL] = []
-//                            for remote in remoteURLs {
-//                                do {
-//                                    let local = try await store.cacheRemoteImage(remote)
-//                                    localURLs.append(local)
-//                                } catch {
-//                                    // Skip a failed item; continue with others
-//                                    print("Cache failed for \(remote):", error.localizedDescription)
-//                                }
-//                            }
-//                            guard !localURLs.isEmpty else { return }
-//
-//                            // Save to Core Data (main-context)
-//                            await MainActor.run {
-//                                do {
-//                                    try CoreDataManager.shared.saveLocalHistory(
-//                                        locals: localURLs,
-//                                        remotes: remoteURLs.map { Optional($0) },
-//                                        isGenerated: (kind == .generated),
-//                                        isEdited: (kind == .edited),
-//                                        prompt: prompt,
-//                                        source: source
-//                                    )
-//                                } catch {
-//                                    print("History save failed:", error.localizedDescription)
-//                                }
-//                            }
-//                        }
+                        Task.detached {
+                            let store = LocalImageStore.shared
+                            var localURLs: [URL] = []
+                            for remote in remoteURLs {
+                                do {
+                                    let local = try await store.cacheRemoteImage(remote)
+                                    localURLs.append(local)
+                                } catch {
+                                    // Skip a failed item; continue with others
+                                    print("Cache failed for \(remote):", error.localizedDescription)
+                                }
+                            }
+                            guard !localURLs.isEmpty else { return }
+
+                            // Save to Core Data (main-context)
+                            await MainActor.run {
+                                do {
+                                    try CoreDataManager.shared.saveLocalHistory(
+                                        locals: localURLs,
+                                        remotes: remoteURLs.map { Optional($0) },
+                                        prompt: prompt,
+                                        source: source
+                                    )
+                                } catch {
+                                    print("History save failed:", error.localizedDescription)
+                                }
+                            }
+                        }
 
                         return
                     }

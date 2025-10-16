@@ -25,6 +25,8 @@ struct DreamGardenView: View {
     @State private var showToast = false
     @State private var toastMessage = ""
     
+    @State private var showValidationAlert = false
+    
     var body: some View {
         KeyboardAvoidingView {
             VStack(spacing: 0) {
@@ -47,9 +49,14 @@ struct DreamGardenView: View {
                 Spacer()
                 
                 Button {
-                    navigateToProcessView = true
+                    
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         impactfeedback.impactOccurred()
+                    }
+                    if description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        showValidationAlert = true
+                    } else {
+                        navigateToProcessView = true
                     }
                 } label: {
                     Text("Design Now")
@@ -63,7 +70,7 @@ struct DreamGardenView: View {
                         .padding(.horizontal,ScaleUtility.scaledSpacing(15))
                         .padding(.bottom,ScaleUtility.scaledSpacing(40))
                 }
-                .disabled(description == "")
+//                .disabled(description == "")
                 
             }
         }
@@ -74,6 +81,15 @@ struct DreamGardenView: View {
                 .frame(maxWidth: .infinity,maxHeight: .infinity)
         }
         .ignoresSafeArea(.all)
+        .alert(isPresented: $showToast) {
+            Alert(
+                title: Text("Error"),
+                message: Text("Unable to process. Try again with different prompt or image."),
+                dismissButton: .default(Text("OK")) {
+                    showToast = false
+                }
+            )
+        }
         .navigationDestination(isPresented: $navigateToProcessView) {
             ProcessingView(
                 viewModel: viewModel,
@@ -102,7 +118,7 @@ struct DreamGardenView: View {
                         )
                         
 //                        viewModel.currentKind = .generated
-                        viewModel.currentSource = "DreamEventDesignerView"
+                        viewModel.currentSource = "Dream Garden"
                         viewModel.currentPrompt = prompt
                         
                         let started = await viewModel.startTextJob(prompt: prompt)
@@ -114,6 +130,11 @@ struct DreamGardenView: View {
                     }
                 }
             )
+        }
+        .alert("Missing Information", isPresented: $showValidationAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Please describe your dream garden in the description box to continue.")
         }
         
     }

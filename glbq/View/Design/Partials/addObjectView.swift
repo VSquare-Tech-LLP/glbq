@@ -80,7 +80,7 @@ struct addObjectView: View {
                                             .frame(width: isIPad ?  ScaleUtility.scaledValue(198) :  ScaleUtility.scaledValue(132),
                                                    height: isIPad ?  ScaleUtility.scaledValue(127)  : ScaleUtility.scaledValue(85))
                                             .overlay {
-                                                if !isSelected {
+                                                if isSelected {
                                                     RoundedRectangle(cornerRadius: 10)
                                                         .inset(by: -0.5)
                                                         .stroke(.appBlack.opacity(0.2), lineWidth: 1)

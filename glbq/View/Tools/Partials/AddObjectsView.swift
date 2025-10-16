@@ -9,8 +9,17 @@ import Foundation
 import PhotosUI
 import SwiftUI
 
+
+
 struct AddObjectsView: View {
     @StateObject private var keyboard = KeyboardResponder()
+    @StateObject private var viewModel = GenerationViewModel()
+    @State private var isGenerating = false
+    @State private var navigateToProcessView = false
+    
+    @State private var showToast = false
+    @State private var toastMessage = ""
+    
     let impactfeedback = UIImpactFeedbackGenerator(style: .medium)
     
     @State private var showUploadSheet = false
@@ -43,7 +52,12 @@ struct AddObjectsView: View {
     @FocusState private var withFocused: Bool
     @State var objToAddText: String = ""
     
+    @State var showPopUp: Bool = false
+    
     var onBack: () -> Void
+    
+    @State private var showValidationAlert = false
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             
@@ -63,7 +77,9 @@ struct AddObjectsView: View {
                         VStack(spacing: ScaleUtility.scaledSpacing(20)) {
                             
                             if let image = selectedMainUIImage {
-                                imageCanvasView(selectedImage: image)
+                                imageCanvasView(selectedImage: image,onRemove: {
+                                    selectedMainUIImage = nil
+                                })
                                 
                             } else {
                                 
@@ -84,7 +100,9 @@ struct AddObjectsView: View {
                                 .padding(.leading, ScaleUtility.scaledValue(15))
                             
                             if let image = selectedReferenceUIImage {
-                                imageCanvasView(selectedImage: image)
+                                imageCanvasView(selectedImage: image,onRemove: {
+                                    selectedReferenceUIImage = nil
+                                })
                                 
                             } else {
                                 
@@ -159,22 +177,29 @@ struct AddObjectsView: View {
                 
                 
                 Button {
-                    
+                   
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         impactfeedback.impactOccurred()
                     }
+                    if !canProceed {
+                        showValidationAlert = true
+                    } else {
+                        navigateToProcessView = true
+                    }
+                    
                     
                 } label: {
                     Text("Create Now")
                         .font(FontManager.generalSansMediumFont(size: .scaledFontSize(18)))
                         .multilineTextAlignment(.center)
-                        .foregroundColor(Color.primaryApp)
+                        .foregroundColor(!canProceed ?  Color.appBlack.opacity(0.2)  : Color.primaryApp)
                         .padding(.vertical,ScaleUtility.scaledSpacing(18))
                         .frame(maxWidth: .infinity)
-                        .background(Color.accent)
+                        .background(!canProceed ? Color.diableApp : Color.accent)
                         .cornerRadius(10)
                         .padding(.horizontal,ScaleUtility.scaledSpacing(15))
                         .padding(.bottom,ScaleUtility.scaledSpacing(40))
+//                        .disabled(!canProceed)
                 }
             }
             .zIndex(1)
@@ -188,6 +213,74 @@ struct AddObjectsView: View {
                 .frame(maxWidth: .infinity,maxHeight: .infinity)
         }
         .ignoresSafeArea(.all)
+        .alert(isPresented: $showToast) {
+            Alert(
+                title: Text("Error"),
+                message: Text("Unable to process. Try again with different prompt or image."),
+                dismissButton: .default(Text("OK")) {
+                    showToast = false
+                }
+            )
+        }
+        .navigationDestination(isPresented: $navigateToProcessView) {
+            ProcessingView(
+                viewModel: viewModel,
+                onBack: {
+                    if viewModel.shouldReturnToRecreate {
+                        toastMessage = viewModel.errorMessage ?? "Generation failed. Please try again."
+                        showPopUp = false
+                        navigateToProcessView = false
+                        isGenerating = false
+                        withAnimation { showToast = true }
+                        viewModel.shouldReturnToRecreate = false
+                    }
+                    else {
+                        showPopUp = false
+                        navigateToProcessView = false
+                        isGenerating = false
+                    }
+                },
+                onAppear: {
+                    Task {
+                        guard let venue = selectedMainUIImage else {
+                            viewModel.shouldReturnToRecreate = true
+                            return
+                        }
+
+                        // Build prompt from either text or “using object image”
+                        let prompt = PromptBuilder.buildAddObjectsPrompt(
+                            objectDescription: objToAddText.isEmpty ? nil : objToAddText,
+                            venueContext: nil,
+                            keepBackground: true
+                        )
+                        
+//                        viewModel.currentKind = .edited
+                        viewModel.currentSource = "Add Objects"
+                        viewModel.currentPrompt = prompt
+
+                        let started = await viewModel.startAddObjectJob(
+                            venue: venue,
+                            object: selectedReferenceUIImage,          // nil if text-only path
+                            prompt: prompt
+                        )
+                        if started {
+                            await viewModel.pollUntilReady()
+                        } else {
+                            viewModel.shouldReturnToRecreate = true
+                        }
+                    }
+                }
+            )
+        }
+        .alert("Missing Information", isPresented: $showValidationAlert) {
+                   Button("OK", role: .cancel) { }
+        } message: {
+            if selectedMainUIImage == nil {
+                Text("Please upload a garden photo to continue.")
+            } else {
+                Text("Either upload object photo to add or describe it in the description box.")
+            }
+        }
         .onChange(of: selectedMainItem) { _, newItem in
             guard let newItem else { return }
             Task {
@@ -249,7 +342,7 @@ struct AddObjectsView: View {
                 }
             )
             .presentationDetents([.height( isIPad ? 434.81137 : 320)])
-            .presentationCornerRadius(25)
+            .presentationCornerRadius(20)
             .presentationDragIndicator(.visible)
         }
         .fullScreenCover(isPresented: $showCameraPickerMain) {
@@ -268,7 +361,13 @@ struct AddObjectsView: View {
         .photosPicker(isPresented: $showPhotoPickerReference, selection: $selectedReferenceItem, matching: .images)
     }
     
-    private func imageCanvasView(selectedImage: UIImage) -> some View {
+    private var canProceed: Bool {
+        selectedMainUIImage != nil &&
+        (selectedReferenceUIImage != nil || !objToAddText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+    }
+
+    
+    private func imageCanvasView(selectedImage: UIImage,onRemove: @escaping () -> Void) -> some View {
         GeometryReader { geometry in
             ZStack(alignment: .topTrailing) {
                 Image(uiImage: selectedImage)
@@ -288,8 +387,8 @@ struct AddObjectsView: View {
                 
                         //Remove Image
                         Button{
-                            selectedMainUIImage = nil
-
+                            onRemove()
+                            
                         }label: {
                             Image(.crossIcon2)
                                 .resizable()

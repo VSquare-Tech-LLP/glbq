@@ -12,7 +12,10 @@ import PhotosUI
 
 struct TemplateDesignView: View {
     
+    @StateObject private var viewModel = GenerationViewModel()
+    
     let impactfeedback = UIImpactFeedbackGenerator(style: .medium)
+    @State private var navigateToProcessView = false
     
     @Binding var SelectedTemplate: String
     var onBack: () -> Void
@@ -33,6 +36,10 @@ struct TemplateDesignView: View {
     @State private var imageFrame: CGRect = .zero
     @State private var imageSize: CGSize = .zero
     
+    @State private var showToast = false
+    @State private var toastMessage = ""
+    
+    @State private var showValidationAlert = false
     
     var body: some View {
             
@@ -74,17 +81,20 @@ struct TemplateDesignView: View {
                             
                         }
                     }
-                    
-                    
+           
                 }
                 
                 Spacer()
                 
                 
                 Button {
-                    
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         impactfeedback.impactOccurred()
+                    }
+                    if selectedMainUIImage == nil {
+                        showValidationAlert = true
+                    } else {
+                        navigateToProcessView = true
                     }
                     
                 } label: {
@@ -110,6 +120,76 @@ struct TemplateDesignView: View {
                 .resizable()
                 .frame(maxWidth: .infinity,maxHeight: .infinity)
                 .ignoresSafeArea(.all)
+        }
+        .alert(isPresented: $showToast) {
+            Alert(
+                title: Text("Error"),
+                message: Text(toastMessage),
+                dismissButton: .default(Text("OK")) {
+                    showToast = false
+                }
+            )
+        }
+        .navigationDestination(isPresented: $navigateToProcessView) {
+            ProcessingView(
+                viewModel: viewModel,
+                onBack: {
+                    // Optional: mirror DesignView’s graceful failure handling
+                    if viewModel.shouldReturnToRecreate {
+                        toastMessage = viewModel.errorMessage ?? "Generation failed. Please try again."
+//                        showPopUp = false
+                        navigateToProcessView = false
+                        withAnimation { showToast = true }
+            
+                        viewModel.shouldReturnToRecreate = false
+                    }
+                    else {
+//                        showPopUp = false
+                        navigateToProcessView = false
+                    }
+                },
+                onAppear: {
+                    Task {
+                        // 1) Guard inputs
+                        guard
+                            let ui = selectedMainUIImage,
+                            let reference = UIImage(named: SelectedTemplate + "\(index + 1)")
+                        else {
+                            viewModel.shouldReturnToRecreate = true
+                            return
+                        }
+
+                        // 2) Build the prompt via PromptBuilder
+                        let description =
+                        """
+                        Transform the provided venue photo to match the style and decorations of the selected template image. Keep the venue architecture intact while applying the template’s color scheme, decorative elements, lighting style, and overall aesthetic. High quality, professional photo. No text or logos. No people.
+                        """
+                        let prompt = PromptBuilder.buildTextPrompt(
+                            description: description,
+                            designName: nil,
+                            objectNames: [] // add any template-specific objects if you like
+                        )
+
+                        // 3) Prime view model metadata (mirrors DesignView)
+//                        viewModel.currentKind = .generated
+                        viewModel.currentSource = "Templates"
+                        viewModel.currentPrompt = prompt
+
+                        // 4) Kick off the job, then poll
+                        let started = await viewModel.startJob(venueImage: ui, referenceImage: reference)
+                        if started {
+                            await viewModel.pollUntilReady()
+                        } else {
+                            viewModel.shouldReturnToRecreate = true
+                        }
+                    }
+                }
+            )
+        }
+        .alert("Missing Information", isPresented: $showValidationAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+                Text("Please upload a garden photo to continue.")
         }
         .onChange(of: selectedMainItem) { _, newItem in
             guard let newItem else { return }
@@ -146,7 +226,7 @@ struct TemplateDesignView: View {
                 }
             )
             .presentationDetents([.height( isIPad ? 434.81137 : 320)])
-            .presentationCornerRadius(25)
+            .presentationCornerRadius(20)
             .presentationDragIndicator(.visible)
         }
         .fullScreenCover(isPresented: $showCameraPickerMain) {

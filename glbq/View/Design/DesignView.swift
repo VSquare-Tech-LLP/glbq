@@ -45,6 +45,8 @@ struct DesignView: View {
     
     @State private var navigateToProcessView = false
     
+    @State private var showValidationAlert = false
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
@@ -128,7 +130,7 @@ struct DesignView: View {
                             endPoint: .top
                         )
                     )
-                    .frame(height: 100)
+                    .frame(height: ScaleUtility.scaledValue(100))
                     .allowsHitTesting(true)
               
                 
@@ -138,22 +140,27 @@ struct DesignView: View {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         impactfeedback.impactOccurred()
                     }
-                    navigateToProcessView = true
+                    // Check validation before proceeding
+                    if canProceed {
+                        navigateToProcessView = true
+                    } else {
+                        showValidationAlert = true
+                    }
                     
                 } label: {
                     Text("Create Now")
                         .font(FontManager.generalSansMediumFont(size: .scaledFontSize(18)))
                         .multilineTextAlignment(.center)
-                        .foregroundColor(Color.primaryApp)
+                        .foregroundColor(selectedMainUIImage == nil || selectedType.isEmpty || selectedTheme.isEmpty ? Color.appBlack.opacity(0.2) : Color.primaryApp)
                         .padding(.vertical,ScaleUtility.scaledSpacing(18))
                         .frame(maxWidth: .infinity)
-                        .background(Color.accent)
+                        .background(selectedMainUIImage == nil || selectedType.isEmpty || selectedTheme.isEmpty ?  Color.diableApp  : Color.accent)
                         .cornerRadius(10)
                         .padding(.horizontal,ScaleUtility.scaledSpacing(15))
                         .padding(.bottom, ScaleUtility.scaledSpacing(100))
                     
                 }
-                .disabled(selectedMainUIImage == nil || selectedType.isEmpty || selectedTheme.isEmpty)
+//                .disabled(selectedMainUIImage == nil || selectedType.isEmpty || selectedTheme.isEmpty)
                 .zIndex(1)
                 
             }
@@ -165,6 +172,17 @@ struct DesignView: View {
                 .frame(maxWidth: .infinity,maxHeight: .infinity)
         }
         .ignoresSafeArea(.all)
+        .alert("Missing Information", isPresented: $showValidationAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            if selectedMainUIImage == nil {
+                Text("Please upload a garden photo to continue.")
+            } else if selectedType.isEmpty {
+                Text("Please select a garden type to continue.")
+            } else {
+                Text("Please select a design theme to continue.")
+            }
+        }
         .navigationDestination(isPresented: $navigateToProcessView) {
             ProcessingView(
                 viewModel: viewModel,
@@ -199,7 +217,7 @@ struct DesignView: View {
                         )
                         
 //                        viewModel.currentKind = .generated
-                        viewModel.currentSource = "DesignView"
+                        viewModel.currentSource = "Ai Garden"
                         viewModel.currentPrompt = prompt
                         
                         let started = await viewModel.startDesignJob(image: ui, prompt: prompt)
@@ -256,7 +274,7 @@ struct DesignView: View {
                 }
             )
             .presentationDetents([.height( isIPad ? 434.81137 : 320)])
-            .presentationCornerRadius(25)
+            .presentationCornerRadius(20)
             .presentationDragIndicator(.visible)
         }
         .fullScreenCover(isPresented: $showCameraPickerMain) {
@@ -268,6 +286,9 @@ struct DesignView: View {
         .photosPicker(isPresented: $showPhotoPickerMain, selection: $selectedMainItem, matching: .images)
     }
     
+    private var canProceed: Bool {
+           selectedMainUIImage != nil && !selectedType.isEmpty && !selectedTheme.isEmpty
+       }
     
     private func imageCanvasView(selectedImage: UIImage) -> some View {
         GeometryReader { geometry in

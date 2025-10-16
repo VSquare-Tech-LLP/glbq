@@ -46,7 +46,7 @@ enum PromptBuilder {
         "Bench": "Create a wooden or metal garden bench centered with a clean, minimal background. No people.",
     ]
     
-        // MARK: - Ai Garden Design View
+    // MARK: - Ai Garden Design View
     
     static func buildPrompt(typeName: String,
                             themeName: String,
@@ -70,6 +70,8 @@ enum PromptBuilder {
 
         return parts.joined(separator: " ")
     }
+    
+    // MARK: - Dream Garden Designer
     
     static func buildTextPrompt(description: String,
                                 designName: String?,
@@ -96,4 +98,111 @@ enum PromptBuilder {
         return parts.joined(separator: " ")
     }
     
+    // MARK: - Add object prompt
+    
+    
+    static func buildAddObjectsPrompt(
+          objectDescription: String?,
+          venueContext: String? = nil,
+          keepBackground: Bool = true
+      ) -> String {
+          var parts: [String] = []
+
+          if let desc = objectDescription?.trimmingCharacters(in: .whitespacesAndNewlines),
+             !desc.isEmpty {
+              parts.append("Add the following object(s) into the venue: \"\(desc)\".")
+          } else {
+              parts.append("Add the provided object image into the venue.")
+          }
+
+          if keepBackground {
+              parts.append("Preserve the existing background, architecture and overall composition.")
+          }
+          if let ctx = venueContext, !ctx.isEmpty {
+              parts.append("Environment context: \(ctx). Do not replace or remove this environment.")
+          }
+
+          parts.append("""
+          Make the addition look natural, realistically scaled and lit, with proper shadows and reflections.
+          High quality, realistic lighting, balanced composition. No people, no text or logos.
+          """)
+          parts.append("Avoid floating objects, wrong perspective, or harsh cutout edges.")
+
+          return parts.joined(separator: " ")
+      }
+    
+    // MARK: - Remove object prompt
+    
+    
+    static func buildObjectRemovalPrompt(
+              remove: String,
+              gardenContext: String? = nil,
+              keepBackground: Bool = true
+          ) -> String {
+              let r = remove.trimmingCharacters(in: .whitespacesAndNewlines)
+
+              var parts: [String] = []
+              parts.append("""
+              Remove the following objects from the garden image: "\(r)".
+              """)
+
+              if keepBackground {
+                  parts.append("Preserve the existing garden layout, plants, landscaping, and overall composition.")
+              } else {
+                  parts.append("You may adjust garden elements as needed.")
+              }
+
+              if let ctx = gardenContext, !ctx.isEmpty {
+                  parts.append("Garden context: \(ctx). Do not replace or remove existing garden features.")
+              }
+
+              parts.append("""
+              Fill the removed area naturally with appropriate garden elements like grass, plants, soil, or pathways.
+              Make the removal look seamless and realistic, naturally blended into the surrounding landscape.
+              High quality, natural realistic lighting, balanced composition. No people, no text or logos.
+              """)
+
+              parts.append("Avoid blurry areas, artifacts, or unnatural gaps. Ensure smooth transitions between filled areas and existing garden elements.")
+
+              return parts.joined(separator: " ")
+          }
+    
+    
+    // MARK: - Replace object prompt
+    
+    static func buildObjectReplacementPrompt(
+        replace: String,
+        with replacement: String,
+        gardenContext: String? = nil,
+        keepBackground: Bool = true
+    ) -> String {
+        let r = replace.trimmingCharacters(in: .whitespacesAndNewlines)
+        let w = replacement.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        var parts: [String] = []
+        parts.append("""
+        Replace the following objects in the garden image: "\(r)"
+        with: "\(w)".
+        """)
+
+        if keepBackground {
+            parts.append("Preserve the existing garden layout, plants, landscaping and overall composition.")
+        } else {
+            parts.append("You may adjust garden elements as needed.")
+        }
+
+        if let ctx = gardenContext, !ctx.isEmpty {
+            parts.append("Garden context: \(ctx). Do not replace or remove existing garden features.")
+        }
+
+        parts.append("""
+        Make the replacement look natural, realistic and seamlessly integrated into the garden landscape.
+        Ensure proper scaling, natural shadows, and realistic lighting that matches the garden environment.
+        High quality, natural realistic lighting, balanced composition. No people, no text or logos.
+        """)
+
+        parts.append("Avoid blurry results, mismatched shadows, floating objects, or harsh cutout edges. Blend naturally with surrounding plants and terrain.")
+
+        return parts.joined(separator: " ")
+    }
 }

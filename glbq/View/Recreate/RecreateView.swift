@@ -54,6 +54,8 @@ struct RecreateView: View {
     @State private var showToast = false
     @State private var toastMessage = ""
     
+    @State private var showValidationAlert = false
+    
     var body: some View {
         
      ZStack(alignment: .bottom) {
@@ -157,7 +159,7 @@ struct RecreateView: View {
                             endPoint: .top
                         )
                     )
-                    .frame(height: 100)
+                    .frame(height: ScaleUtility.scaledValue(100))
                     .allowsHitTesting(true)
               
                 
@@ -167,23 +169,26 @@ struct RecreateView: View {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         impactfeedback.impactOccurred()
                     }
-                    navigateToProcessView = true 
-                    
+                    if canProceed && !isRecreateLoading {
+                        navigateToProcessView = true
+                    } else if !isRecreateLoading {
+                        showValidationAlert = true
+                    }
                 } label: {
                     Text("Recreate")
                         .font(FontManager.generalSansMediumFont(size: .scaledFontSize(18)))
                         .multilineTextAlignment(.center)
-                        .foregroundColor(Color.primaryApp)
+                        .foregroundColor(selectedMainUIImage == nil || selectedReferenceImage == nil || isRecreateLoading ?  Color.appBlack.opacity(0.2) :  Color.primaryApp)
                         .padding(.vertical,ScaleUtility.scaledSpacing(18))
                         .frame(maxWidth: .infinity)
-                        .background(Color.accent)
+                        .background(selectedMainUIImage == nil || selectedReferenceImage == nil || isRecreateLoading ? Color.diableApp : Color.accent)
                         .cornerRadius(10)
                         .padding(.horizontal,ScaleUtility.scaledSpacing(15))
                         .padding(.bottom, ScaleUtility.scaledSpacing(100))
                     
                 }
                 .zIndex(1)
-                
+//                .disabled(selectedMainUIImage == nil || selectedReferenceImage == nil || isRecreateLoading)
             }
             
         }
@@ -232,7 +237,7 @@ struct RecreateView: View {
                         return
                     }
                     
-                    viewModel.currentSource = "RecreateView"
+                    viewModel.currentSource = "Recreate"
                     viewModel.currentPrompt = "Transform the provided garden photo using the reference garden's design, landscaping, and plant arrangements. Keep the original garden's space and structure intact while applying the reference garden's style, plants, and layout."
                     
                     let started = await viewModel.startJob(venueImage: venue, referenceImage: reference)
@@ -245,6 +250,15 @@ struct RecreateView: View {
                 }
             })
         }
+        .alert("Missing Information", isPresented: $showValidationAlert) {
+             Button("OK", role: .cancel) { }
+         } message: {
+             if selectedMainUIImage == nil {
+                 Text("Please upload a garden photo to continue.")
+             } else {
+                 Text("Please upload a reference garden photo to continue.")
+             }
+         }
         .onChange(of: selectedMainItem) { _, newItem in
             guard let newItem else { return }
             Task {
@@ -306,7 +320,7 @@ struct RecreateView: View {
                 }
             )
             .presentationDetents([.height( isIPad ? 434.81137 : 320)])
-            .presentationCornerRadius(25)
+            .presentationCornerRadius(20)
             .presentationDragIndicator(.visible)
         }
         .fullScreenCover(isPresented: $showCameraPickerMain) {
@@ -324,6 +338,11 @@ struct RecreateView: View {
         }
         .photosPicker(isPresented: $showPhotoPickerReference, selection: $selectedReferenceItem, matching: .images)
     }
+    
+    private var canProceed: Bool {
+        selectedMainUIImage != nil && selectedReferenceUIImage != nil
+    }
+       
     
     private func imageCanvasView(selectedImage: UIImage,onRemove: @escaping () -> Void) -> some View {
         GeometryReader { geometry in

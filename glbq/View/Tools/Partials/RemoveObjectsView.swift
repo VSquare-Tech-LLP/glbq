@@ -10,6 +10,7 @@ import SwiftUI
 import PhotosUI
 
 struct RemoveObjectsView: View {
+    @StateObject private var viewModel = GenerationViewModel()
     @StateObject private var keyboard = KeyboardResponder()
     
     var onBack: () -> Void
@@ -33,6 +34,12 @@ struct RemoveObjectsView: View {
     @FocusState private var withFocused: Bool
     @State var objToRemoveText: String = ""
     
+    @State private var showToast = false
+    @State private var toastMessage = ""
+    
+    @State private var navigateToProcessView = false
+    
+    @State private var showValidationAlert = false
     
     var body: some View {
         
@@ -98,22 +105,28 @@ struct RemoveObjectsView: View {
             Spacer()
             
             Button {
-                
+
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                     impactfeedback.impactOccurred()
                 }
-                
+                // Check validation before proceeding
+                if !canProceed {
+                    showValidationAlert = true
+                } else {
+                    navigateToProcessView = true
+                }
             } label: {
                 Text("Remove Now")
                     .font(FontManager.generalSansMediumFont(size: .scaledFontSize(18)))
                     .multilineTextAlignment(.center)
-                    .foregroundColor(Color.primaryApp)
+                    .foregroundColor(!canProceed ?  Color.appBlack.opacity(0.2)  : Color.primaryApp)
                     .padding(.vertical,ScaleUtility.scaledSpacing(18))
                     .frame(maxWidth: .infinity)
-                    .background(Color.accent)
+                    .background(!canProceed ? Color.diableApp : Color.accent)
                     .cornerRadius(10)
                     .padding(.horizontal,ScaleUtility.scaledSpacing(15))
                     .padding(.bottom,ScaleUtility.scaledSpacing(40))
+//                    .disabled(!canProceed)
             }
         }
         .navigationBarHidden(true)
@@ -123,6 +136,72 @@ struct RemoveObjectsView: View {
                 .frame(maxWidth: .infinity,maxHeight: .infinity)
         }
         .ignoresSafeArea(.all)
+        .alert(isPresented: $showToast) {
+            Alert(
+                title: Text("Error"),
+                message: Text("Unable to process. Try again with different prompt or image."),
+                dismissButton: .default(Text("OK")) {
+                    showToast = false
+                }
+            )
+        }
+        .navigationDestination(isPresented: $navigateToProcessView) {
+            ProcessingView(
+                viewModel: viewModel,
+                onBack: {
+                
+
+                    if viewModel.shouldReturnToRecreate {
+                        toastMessage = viewModel.errorMessage ?? "Generation failed. Please try again."
+//                        showPopUp = false
+                        navigateToProcessView = false
+                        withAnimation { showToast = true }
+                 
+                        viewModel.shouldReturnToRecreate = false
+                    }
+                    else {
+//                        showPopUp = false
+                        navigateToProcessView = false
+                    }
+                },
+                onAppear: {
+                    Task {
+                        guard let image = selectedMainUIImage else {
+                            viewModel.shouldReturnToRecreate = true
+                            return
+                        }
+                        
+                        
+
+                        let prompt = PromptBuilder.buildObjectRemovalPrompt(
+                            remove: objToRemoveText,
+                            gardenContext: nil,
+                            keepBackground: true
+                        )
+                        
+//                        viewModel.currentKind = .edited
+                        viewModel.currentSource = "Remove Objects"
+                        viewModel.currentPrompt = prompt
+
+                        let started = await viewModel.startDesignJob(image: image, prompt: prompt)
+                        if started {
+                            await viewModel.pollUntilReady()
+                        } else {
+                            viewModel.shouldReturnToRecreate = true
+                        }
+                    }
+                }
+            )
+        }
+        .alert("Missing Information", isPresented: $showValidationAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            if selectedMainUIImage == nil {
+                Text("Please upload a garden photo to continue.")
+            } else {
+                Text("Please describe the object you want to remove in the description box.")
+            }
+        }
         .onChange(of: selectedMainItem) { _, newItem in
             guard let newItem else { return }
             Task {
@@ -145,8 +224,17 @@ struct RemoveObjectsView: View {
                 showSheet: $showUploadSheet,
                 onCameraTap: {
                     showUploadSheet = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        showCameraPickerMain = true
+                    showUploadSheet = false
+                    Task { @MainActor in
+                        if await CameraAuth.requestIfNeeded() {
+                            try? await Task.sleep(nanoseconds: 300_000_000)
+                            showCameraPickerMain = true
+                            
+                        } else {
+                            cameraDeniedOnce = (CameraAuth.status() != .notDetermined)
+                            try? await Task.sleep(nanoseconds: 300_000_000)
+                            showCameraPickerMain = true
+                        }
                     }
                 },
                 onGalleryTap: {
@@ -158,7 +246,7 @@ struct RemoveObjectsView: View {
                 }
             )
             .presentationDetents([.height( isIPad ? 434.81137 : 320)])
-            .presentationCornerRadius(25)
+            .presentationCornerRadius(20)
             .presentationDragIndicator(.visible)
         }
         .fullScreenCover(isPresented: $showCameraPickerMain) {
@@ -220,4 +308,10 @@ struct RemoveObjectsView: View {
         .padding(.horizontal, ScaleUtility.scaledSpacing(15))
         .frame(height: ScaleUtility.scaledValue(245))
     }
+    
+    private var canProceed: Bool {
+        selectedMainUIImage != nil &&
+        !objToRemoveText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    
 }

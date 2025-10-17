@@ -12,6 +12,8 @@ struct HeaderView: View {
     var highPadding: Bool
     var title: String
     var onBack: () -> Void
+    @EnvironmentObject var purchaseManager: PurchaseManager
+    @State var isShowPayWall: Bool = false
  
     var body: some View {
         
@@ -37,16 +39,27 @@ struct HeaderView: View {
            
             }
             
-            Image(.crownIcon)
-                 .resizable()
-                 .frame(width: ScaleUtility.scaledValue(24), height: ScaleUtility.scaledValue(24))
-                 .padding(.all, ScaleUtility.scaledSpacing(9))
-                 .background {
-                     Circle()
-                         .fill(Color.primaryApp)
-                 }
+            Button {
+                isShowPayWall = true
+            } label: {
+                Image(.crownIcon)
+                    .resizable()
+                    .frame(width: ScaleUtility.scaledValue(24), height: ScaleUtility.scaledValue(24))
+                    .padding(.all, ScaleUtility.scaledSpacing(9))
+                    .background {
+                        Circle()
+                            .fill(Color.primaryApp)
+                    }
+            }
         }
         .padding(.horizontal, ScaleUtility.scaledSpacing(15))
         .padding(.top, highPadding ?  ScaleUtility.scaledSpacing(59) : ScaleUtility.scaledSpacing(15))
+        .fullScreenCover(isPresented: $isShowPayWall) {
+            PaywallView(isInternalOpen: true) {
+                isShowPayWall = false
+            } purchaseCompletSuccessfullyAction: {
+                isShowPayWall = false
+            }
+        }
     }
 }

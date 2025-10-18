@@ -25,7 +25,7 @@ struct ProcessingView: View {
             VStack(spacing: ScaleUtility.scaledSpacing(20)) {
                 
                 Spacer()
-                    .frame(height: ScaleUtility.scaledValue(317))
+                    .frame(height: isIPad ? ScaleUtility.scaledValue(425) : ScaleUtility.scaledValue(317))
                 
                 ZStack {
                     // Background circle
@@ -37,7 +37,7 @@ struct ProcessingView: View {
                     Circle()
                         .trim(from: 0, to: progress)
                         .stroke(
-                            Color.accentColor,
+                            Color.accent,
                             style: StrokeStyle(
                                 lineWidth: 4.09091,
                                 lineCap: .round

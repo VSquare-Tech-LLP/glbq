@@ -56,8 +56,7 @@ struct HistoryView: View {
                         ForEach(Array(records.chunked(into: 2)), id: \.first?.objectID) { rowRecords in
                             HStack(spacing: ScaleUtility.scaledSpacing(15)) {
                                 ForEach(rowRecords, id: \.objectID) { rec in
-                                    
-                                    
+                                
                                     HistoryCardView(
                                         record: rec,
                                         imagesDirectory: getImagesDirectory(),
@@ -152,7 +151,7 @@ struct HistoryView: View {
             FilterSheetView(selectedFilter: $selectedFilter, showSheet: $showFilterSheet)
                 .frame(height: isIPad ? ScaleUtility.scaledValue(660) : ScaleUtility.scaledValue(440) )
                 .background(Color.primaryApp)
-                .presentationDetents([.height( isIPad ? ScaleUtility.scaledValue(660) : ScaleUtility.scaledValue(440))])
+                .presentationDetents([.height( isIPad ? ScaleUtility.scaledValue(520) : ScaleUtility.scaledValue(440))])
                 .presentationCornerRadius(20)
         }
     }

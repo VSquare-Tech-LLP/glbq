@@ -35,10 +35,9 @@ struct PaywallHeaderView: View {
       
             Image(.paywall)
                   .resizable()
-                  .aspectRatio(contentMode: .fill)
-                  .frame(height: isIPad ? ScaleUtility.scaledValue(306) :   ScaleUtility.scaledValue(204))
+                  .frame(height: isIPad ? ScaleUtility.scaledValue(356) : ScaleUtility.scaledValue(204))
                   .frame(maxWidth: .infinity)
-                  .padding(.top,ScaleUtility.scaledSpacing(54))
+                  .padding(.top, isIPad ? ScaleUtility.scaledSpacing(44) : ScaleUtility.scaledSpacing(54))
             
             Image(.grassIcon2)
                 .resizable()
@@ -281,7 +280,7 @@ struct PaywallPlanView: View {
                         }
                     }
                     .padding(.horizontal,ScaleUtility.scaledSpacing(20))
-                    .frame(height: ScaleUtility.scaledValue(60))
+                    .frame(height: isIPad ?  ScaleUtility.scaledValue(90) : ScaleUtility.scaledValue(60))
                     .frame(maxWidth: .infinity)
                     .background {
                         if selectedPlan == plan {

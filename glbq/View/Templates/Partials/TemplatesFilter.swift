@@ -15,11 +15,13 @@ struct TemplatesFilter: View {
     let selectionFeedback = UISelectionFeedbackGenerator()
     
     @Binding var selectedOption: String
-    var templateOptions = ["Luxury",
-                           "Home",
+    var templateOptions = ["Home",
+                           "Apartment",
                            "Office",
-                           "Hotel",
-                           "Restaurant"]
+                           "Cafe",
+                           "Rooftop",
+                           "Resort",
+                           "Backyard"]
 
     
     var body: some View {

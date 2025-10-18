@@ -34,7 +34,8 @@ struct UploadContainer: View {
                 
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, ScaleUtility.scaledSpacing(81))
+            .frame(height: isIPad ? ScaleUtility.scaledValue(368) : ScaleUtility.scaledValue(245))
+//            .padding(.vertical, ScaleUtility.scaledSpacing(81))
             .background(.primaryApp)
             .cornerRadius(20)
             .overlay(

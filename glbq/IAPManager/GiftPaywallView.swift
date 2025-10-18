@@ -85,8 +85,8 @@ struct GiftPaywallView: View {
                
                Image(.giftIcon)
                    .resizable()
-                   .frame(width: isIPad ? ScaleUtility.scaledValue(180) : ScaleUtility.scaledValue(180),
-                          height: isIPad ? ScaleUtility.scaledValue(180) : ScaleUtility.scaledValue(180))
+                   .frame(width: isIPad ? ScaleUtility.scaledValue(270) : ScaleUtility.scaledValue(180),
+                          height: isIPad ? ScaleUtility.scaledValue(270) : ScaleUtility.scaledValue(180))
               
             }
             .padding(.top, ScaleUtility.scaledSpacing(59))

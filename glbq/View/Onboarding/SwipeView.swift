@@ -15,7 +15,7 @@ struct SwipeView: View {
     @State private var shownextScreen = false
     let totalScreens = 8
     var showPaywall: () -> Void
-    @State private var selections: Set<String> = []
+    @State private var selectedOptions: Set<String> = []
     
     var body: some View {
         PagingTabView(selectedIndex: $currentIndex, tabCount: totalScreens, spacing: 0) {
@@ -57,7 +57,7 @@ struct SwipeView: View {
                 RatingView()
                     .tag(6)
                 
-                QuestionsView()
+                QuestionsView(selectedOptions: $selectedOptions)
                     .tag(7)
                 
             }
@@ -68,7 +68,7 @@ struct SwipeView: View {
     }
     
     private func handleButtonPress() {
-        if currentIndex == 6 {
+        if currentIndex == 7 {
             showPaywall()
         }
         else {

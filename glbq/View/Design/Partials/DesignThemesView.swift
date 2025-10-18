@@ -23,35 +23,35 @@ struct DesignThemesView: View {
     var DesignThemes: [DesignTheme] = [
         
         DesignTheme(name: "Modern",
-              imageName: "dummyImage1",
+              imageName: "Modern",
               prompt: "Create a sleek modern garden with clean geometric paths, minimal plants, stone tiles, and stylish outdoor furniture in neutral tones. No people."),
         
         DesignTheme(name: "Luxury",
-              imageName: "dummyImage1",
+              imageName: "Luxury",
               prompt: "Create an elegant luxury garden with a central pool, marble flooring, sculpted hedges, warm lighting, and premium lounge seating. No people."),
         
         DesignTheme(name: "Cozy",
-            imageName: "dummyImage1",
+            imageName: "Cozy",
             prompt: "Create a warm cozy garden with wooden furniture, soft string lights, potted flowers, and a comfortable, homey atmosphere. No people."),
         
         DesignTheme(name: "Asian",
-            imageName: "dummyImage1",
+            imageName: "Asian",
             prompt: "Create a serene Asian garden with bamboo, stone lanterns, a koi pond, and a small wooden bridge surrounded by greenery. No people."),
         
         DesignTheme(name: "Tropical",
-            imageName: "dummyImage1",
+            imageName: "Tropical",
             prompt: "Create a vibrant tropical garden with palm trees, colorful flowers, wooden decking, and a sunny island resort vibe. No people."),
         
         DesignTheme(name: "Minimal",
-            imageName: "dummyImage1",
+            imageName: "Minimal",
             prompt: "Create a clean minimal garden with simple stone pathways, sparse plants, neutral tones, and open space for calm balance. No people."),
         
         DesignTheme(name: "Rustic",
-            imageName: "dummyImage1",
+            imageName: "Rustic",
             prompt: "Create a charming rustic garden with wooden fences, wildflowers, a stone path, and natural textures for a countryside feel. No people."),
         
         DesignTheme(name: "Classic",
-            imageName: "dummyImage1",
+            imageName: "Classic",
             prompt: "Create a timeless classic garden with symmetrical hedges, a central fountain, elegant benches, and neatly trimmed greenery. No people."),
         
     ]
@@ -130,6 +130,9 @@ struct DesignThemesView: View {
                                                     .inset(by: -0.5)
                                                     .stroke(.appBlack.opacity(0.2), lineWidth: 1)
                                             }
+                                            .cornerRadius(13)
+                                            .clipped()
+                                            .contentShape(RoundedRectangle(cornerRadius: 13))
                                         
                                     }
                                     

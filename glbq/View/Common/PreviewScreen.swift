@@ -56,7 +56,7 @@ struct PreviewScreen: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
-                    .cornerRadius(10)
+                    .cornerRadius(20)
                     .padding(.horizontal, ScaleUtility.scaledSpacing(15))
                     .frame(minHeight: isIPad ?  ScaleUtility.scaledValue(645) : ScaleUtility.scaledValue(345))
                 

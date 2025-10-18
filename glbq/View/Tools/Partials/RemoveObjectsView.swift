@@ -10,6 +10,16 @@ import SwiftUI
 import PhotosUI
 
 struct RemoveObjectsView: View {
+    @StateObject var userDefault = UserSettings()
+    @EnvironmentObject var purchaseManager: PurchaseManager
+    @EnvironmentObject var remoteConfigManager: RemoteConfigManager
+    
+    @StateObject private var ads = RewardedAdManager(adUnitID: "ca-app-pub-3997698054569290/2718681220")
+    
+    @State var isShowPayWall: Bool = false
+    @State var showLimitPopOver: Bool = false
+    @State var showPopUp: Bool = false
+    
     @StateObject private var viewModel = GenerationViewModel()
     @StateObject private var keyboard = KeyboardResponder()
     
@@ -113,7 +123,54 @@ struct RemoveObjectsView: View {
                 if !canProceed {
                     showValidationAlert = true
                 } else {
-                    navigateToProcessView = true
+                    userDefault.resetIfNeeded()
+                    let dailyLimit = remoteConfigManager.dailyLimit
+                    let extensionLimit = remoteConfigManager.extendedLimit
+                    let totalAllowed = purchaseManager.hasPro ? dailyLimit + (extensionLimit * userDefault.extensionPurchasesToday)
+                    : remoteConfigManager.freeConvertion + remoteConfigManager.maximumRewardAd
+                    
+                    if userDefault.dailyGeneratedImages >= totalAllowed {
+                        if purchaseManager.hasPro {
+                            showLimitPopOver = true
+                        } else {
+                            isShowPayWall = true
+                        }
+                        return
+                    }
+                    else {
+                        
+                        if !purchaseManager.hasPro && remoteConfigManager.showAds {
+                            
+                            if userDefault.freeImageGenerated < remoteConfigManager.freeConvertion {
+                                
+                                navigateToProcessView = true
+                                userDefault.freeImageGenerated += 1
+                                userDefault.dailyGeneratedImages += 1
+                            }
+                            else if userDefault.freeImageGenerated == remoteConfigManager.freeConvertion && userDefault.rewardAdsImageGenerated >= remoteConfigManager.maximumRewardAd{
+                                isShowPayWall = true
+                            }
+                            else {
+                                showPopUp = true
+                            }
+                        }
+                        else if !purchaseManager.hasPro && remoteConfigManager.temporaryAdsClosed {
+                            if userDefault.rewardAdsImageGenerated >= remoteConfigManager.maximumRewardAd {
+                                isShowPayWall = true
+                            }
+                            else {
+                                
+                                userDefault.rewardAdsImageGenerated += 1
+                                userDefault.dailyGeneratedImages += 1
+                                navigateToProcessView = true
+                            }
+                        }
+                        else {
+                            userDefault.dailyGeneratedImages += 1
+                            navigateToProcessView = true
+                        }
+                        
+                    }
                 }
             } label: {
                 Text("Remove Now")
@@ -145,6 +202,73 @@ struct RemoveObjectsView: View {
                 }
             )
         }
+        .task {
+            // Preload ad only when sheet is presented
+            //                AnalyticsManager.shared.log(.magicDesigner)
+            if !purchaseManager.hasPro {
+                await ads.load()
+            }
+        }
+        .overlay {
+            if showPopUp {
+                ZStack {
+                    Color.appBlack.opacity(0.7).ignoresSafeArea(.all)
+                        .ignoresSafeArea(.all)
+                        .transition(.opacity)
+                        .onTapGesture {
+                            // tap outside to close (optional)
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                showPopUp = false
+                            }
+                        }
+                    
+                    AdsAlertView {
+                        isShowPayWall = true
+//                        AnalyticsManager.shared.log(.getPremiumFromAlert)
+                        
+                    } watchAds: {
+//                        AnalyticsManager.shared.log(.watchanAd)
+                        ads.showOrProceed(
+                            onReward: { _ in
+                                navigateToProcessView = true
+                                userDefault.rewardAdsImageGenerated += 1
+                                userDefault.dailyGeneratedImages += 1
+                            },
+                            proceedAnyway: {
+                                navigateToProcessView = true
+                                userDefault.rewardAdsImageGenerated += 1
+                                userDefault.dailyGeneratedImages += 1
+                            }
+                        )
+                  
+                    } closeAction: {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            showPopUp = false
+                        }
+                    }
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.95).combined(with: .opacity),
+                        removal: .scale(scale: 0.85).combined(with: .opacity)
+                    ))
+                    .zIndex(1) // keep it above the dimmer
+                    
+                    
+                }
+             
+            }
+        }
+        .overlay(
+            LimitReachedView(
+                isVisible: $showLimitPopOver,
+                dailyCap: remoteConfigManager.dailyLimit,
+                additionalQuota: remoteConfigManager.extendedLimit,
+                extensionProduct: purchaseManager.findProduct(for: .limitExtension),
+                triggeredByLimit: true
+            )
+            .environmentObject(purchaseManager)
+            .environmentObject(userDefault)
+            .environmentObject(remoteConfigManager)
+        )
         .navigationDestination(isPresented: $navigateToProcessView) {
             ProcessingView(
                 viewModel: viewModel,
@@ -245,7 +369,7 @@ struct RemoveObjectsView: View {
                     }
                 }
             )
-            .presentationDetents([.height( isIPad ? 434.81137 : 320)])
+              .presentationDetents([.height(320)])
             .presentationCornerRadius(20)
             .presentationDragIndicator(.visible)
         }
@@ -306,7 +430,7 @@ struct RemoveObjectsView: View {
             .frame(width: geometry.size.width, height: min(geometry.size.height, ScaleUtility.scaledValue(345)))
         }
         .padding(.horizontal, ScaleUtility.scaledSpacing(15))
-        .frame(height: ScaleUtility.scaledValue(245))
+        .frame(height: isIPad ? ScaleUtility.scaledValue(368) : ScaleUtility.scaledValue(245))
     }
     
     private var canProceed: Bool {

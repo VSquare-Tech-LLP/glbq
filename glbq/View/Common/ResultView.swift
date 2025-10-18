@@ -57,7 +57,7 @@ struct ResultView: View {
                             ZStack {
                                 Rectangle()
                                     .fill(Color.appBlack.opacity(0.2))
-                                    .cornerRadius(10)
+                                    .cornerRadius(20)
                                 
                                 ProgressView()
                                     .tint(Color.primaryApp)
@@ -70,7 +70,7 @@ struct ResultView: View {
                         }
                         .resizable()
                         .scaledToFit() // This ensures proper aspect ratio within the container
-                        .cornerRadius(10)
+                        .cornerRadius(20)
                         .padding(.horizontal, ScaleUtility.scaledSpacing(15)) // Same as ImagePreview
                         .frame(minHeight: isIPad ?  ScaleUtility.scaledValue(645) : ScaleUtility.scaledValue(400))
                 } else {

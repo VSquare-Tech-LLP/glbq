@@ -17,6 +17,10 @@ enum TabSelection: Hashable {
 }
 
 struct MainView: View {
+    
+    @EnvironmentObject var purchaseManager: PurchaseManager
+    @EnvironmentObject var remoteConfigManager: RemoteConfigManager
+    @EnvironmentObject var appOpenAdManager: AppOpenAdManager
 
     @State private var selectedTab: TabSelection = .templates
   
@@ -24,6 +28,9 @@ struct MainView: View {
     let impactFeedback = UIImpactFeedbackGenerator(style: .light)
     let selectionFeedback = UISelectionFeedbackGenerator()
 
+    @State var showPopUp: Bool = false
+    @State var showLimitPopOver: Bool = false
+    
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
@@ -36,9 +43,9 @@ struct MainView: View {
                                selectedTab = .recreate
                            })
                     case .design:
-                           DesignView()
+                        DesignView(showPopUp: $showPopUp,showLimitPopOver: $showLimitPopOver)
                     case .recreate:
-                           RecreateView()
+                           RecreateView(showPopUp: $showPopUp,showLimitPopOver: $showLimitPopOver)
                     case .tools:
                         ToolsView(designRecreator: {
                             selectedTab = .recreate
@@ -159,17 +166,34 @@ struct MainView: View {
 
                     }
                     .padding(.bottom,isSmalliphone ? ScaleUtility.scaledSpacing(10) : ScaleUtility.scaledSpacing(15))
-                    .padding(.horizontal, ScaleUtility.scaledSpacing(30))
+                    .padding(.horizontal, isIPad ? ScaleUtility.scaledSpacing(80) : ScaleUtility.scaledSpacing(30))
                     .frame(maxWidth: .infinity)
                     .frame(height: ScaleUtility.scaledValue(90))
                     .background(Color.primaryApp)
                     .cornerRadius(15)
                     .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: -5)
+                    .opacity(showPopUp == true || showLimitPopOver == true ? 0 : 1)
                 
                 }
             }
             .edgesIgnoringSafeArea(.bottom)
             .ignoresSafeArea(.keyboard)
+            .onAppear {
+                if !purchaseManager.hasPro && remoteConfigManager.showAds {
+                    if appOpenAdManager.isAppload {
+                        appOpenAdManager.showAdIfAvailable()
+                        
+                    }
+                }
+            }
+            .onChange(of: appOpenAdManager.isAppload) { newValue in
+                if !purchaseManager.hasPro && remoteConfigManager.showAds {
+                    if newValue == true {
+                            appOpenAdManager.showAdIfAvailable()
+                          
+                    }
+                }
+            }
         }
     }
 }

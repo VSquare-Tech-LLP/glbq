@@ -13,13 +13,14 @@ struct WelcomeView: View {
         VStack(spacing: 0) {
             
             Spacer()
-                .frame(height: ScaleUtility.scaledValue(250))
+                .frame(height: isIPad ? ScaleUtility.scaledValue(375) : ScaleUtility.scaledValue(250))
             
             VStack(spacing: ScaleUtility.scaledSpacing(20)) {
                 
                 Image(.appLogo)
                     .resizable()
-                    .frame(width: ScaleUtility.scaledValue(120), height: ScaleUtility.scaledValue(120))
+                    .frame(width: isIPad ? ScaleUtility.scaledValue(180) : ScaleUtility.scaledValue(120),
+                           height: isIPad ? ScaleUtility.scaledValue(180) : ScaleUtility.scaledValue(120))
                 
                 
                 VStack(spacing: ScaleUtility.scaledSpacing(5)) {
@@ -40,6 +41,6 @@ struct WelcomeView: View {
             
             
         }
-        .background(Color.primaryApp).ignoresSafeArea(.all)
+       
     }
 }

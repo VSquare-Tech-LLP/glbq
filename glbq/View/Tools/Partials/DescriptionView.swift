@@ -131,7 +131,7 @@ struct DescriptionView: View {
                 }
             }
         }
-        .frame(height: ScaleUtility.scaledValue(145))
+        .frame(height: isIPad ? ScaleUtility.scaledValue(218) : ScaleUtility.scaledValue(145))
         .padding(.top, ScaleUtility.scaledSpacing(15))
         .padding(.bottom, ScaleUtility.scaledSpacing(15))
         .padding(.horizontal, ScaleUtility.scaledSpacing(15))

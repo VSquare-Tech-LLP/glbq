@@ -50,7 +50,7 @@ struct FooterView: View {
                             .resizable()
                             .frame(width: ScaleUtility.scaledValue(24), height: ScaleUtility.scaledValue(24))
                         
-                        Text("Save to Gallery")
+                        Text("Share")
                             .font(FontManager.generalSansMediumFont(size: .scaledFontSize(18)))
                             .multilineTextAlignment(.center)
                             .foregroundColor(.appBlack)

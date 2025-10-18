@@ -19,8 +19,8 @@ struct TemplateImageView: View {
         Image(imageName)
             .resizable()
             .scaledToFill()
-            .frame(width: ScaleUtility.scaledValue(165),
-                   height: (index / 2) % 2 == index % 2 ? ScaleUtility.scaledValue(178) : ScaleUtility.scaledValue(156))
+            .frame(width: isIPad ? ScaleUtility.scaledValue(355) : ScaleUtility.scaledValue(165),
+                   height: (index / 2) % 2 == index % 2 ? isIPad ? ScaleUtility.scaledValue(267) : ScaleUtility.scaledValue(178) : isIPad ? ScaleUtility.scaledValue(234) : ScaleUtility.scaledValue(156))
             .cornerRadius(20)
             .shadow(color: .black.opacity(0.25), radius: 4.7, x: 0, y: 4)
             .overlay(

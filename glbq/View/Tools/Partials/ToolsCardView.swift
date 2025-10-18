@@ -86,8 +86,7 @@ struct ToolsCardView: View {
                 
             }
             .frame(maxWidth: .infinity)
-            .frame(width: isFullWidth ? nil : ScaleUtility.scaledValue(165),
-                   height: ScaleUtility.scaledValue(165))
+            .frame(height: isIPad ? ScaleUtility.scaledValue(248) : ScaleUtility.scaledValue(165))
             .background(Color.primaryApp)
             .cornerRadius(20)
             .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)

@@ -11,7 +11,7 @@ import SwiftUI
 
 struct TemplatesView: View {
     
-    @State var selectedOption: String = "Luxury"
+    @State var selectedOption: String = "Home"
     @State  var navigateToSettings: Bool = false
     @State private var navigateToTemplateDesign = false
     @State private var selectedTemplate = ""
@@ -74,10 +74,7 @@ struct TemplatesView: View {
                 Spacer()
                     .frame(height: ScaleUtility.scaledValue(100))
             }
-            
-            
-            
-            
+           
             Spacer()
             
         }

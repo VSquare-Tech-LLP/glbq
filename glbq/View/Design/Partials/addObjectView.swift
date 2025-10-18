@@ -22,15 +22,15 @@ struct addObjectView: View {
     @Binding var selectedObjects: Set<String>
     
     var Objects: [Object] = [
-        Object(name: "Pool", selectedImage: "dummyImage1", unSelectedImage:"dummyImage2" ,prompt: "Create a realistic swimming pool with clean water, simple tiling, and a plain neutral background. No people."),
-        Object(name: "Furniture", selectedImage: "dummyImage1",  unSelectedImage:"dummyImage2" ,prompt: "Create elegant outdoor furniture including a chair and table with a clean, minimal background. No people."),
-        Object(name: "Gazebo",   selectedImage: "dummyImage1",  unSelectedImage:"dummyImage2" ,prompt: "Create a beautiful wooden gazebo with detailed structure and a plain background. No people."),
-        Object(name: "Fountain", selectedImage: "dummyImage1", unSelectedImage:"dummyImage2" ,prompt: "Create a classic water fountain with clear details and a simple, clean background. No people."),
-        Object(name: "Pathway", selectedImage: "dummyImage1", unSelectedImage:"dummyImage2" ,prompt: "Create a stone or tile garden pathway viewed from above with a plain neutral background. No people."),
-        Object(name: "Trees", selectedImage: "dummyImage1", unSelectedImage:"dummyImage2" ,prompt: "Create a realistic tree with full green foliage and a clean white background. No people."),
-        Object(name: "Lights", selectedImage: "dummyImage1", unSelectedImage:"dummyImage2" ,prompt: "Create decorative garden lights or lanterns with a clear, minimal background. No people."),
-        Object(name: "Firepit", selectedImage: "dummyImage1", unSelectedImage:"dummyImage2" ,prompt: "Create a modern outdoor firepit with clean lines and a simple, plain background. No people."),
-        Object(name: "Bench", selectedImage: "dummyImage1", unSelectedImage:"dummyImage2" ,prompt: "Create a wooden or metal garden bench centered with a clean, minimal background. No people."),
+        Object(name: "Pool", selectedImage: "Pool", unSelectedImage:"Pool2" ,prompt: "Create a realistic swimming pool with clean water, simple tiling, and a plain neutral background. No people."),
+        Object(name: "Furniture", selectedImage: "Furniture",  unSelectedImage:"Furniture2" ,prompt: "Create elegant outdoor furniture including a chair and table with a clean, minimal background. No people."),
+        Object(name: "Gazebo",   selectedImage: "Gazebo",  unSelectedImage:"Gazebo2" ,prompt: "Create a beautiful wooden gazebo with detailed structure and a plain background. No people."),
+        Object(name: "Fountain", selectedImage: "Fountain", unSelectedImage:"Fountain2" ,prompt: "Create a classic water fountain with clear details and a simple, clean background. No people."),
+        Object(name: "Hammock", selectedImage: "Hammock", unSelectedImage:"Hammock2" ,prompt: "A realistic image of a modern outdoor hammock (with or without stand), isolated on a clean plain background. The hammock should be the only object, centered, clean, and well-lit. No background, trees, or people."),
+        Object(name: "Trees", selectedImage: "Trees", unSelectedImage:"Trees2" ,prompt: "Create a realistic tree with full green foliage and a clean white background. No people."),
+        Object(name: "Lights", selectedImage: "Lights", unSelectedImage:"Lights2" ,prompt: "Create decorative garden lights or lanterns with a clear, minimal background. No people."),
+        Object(name: "Firepit", selectedImage: "Firepit", unSelectedImage:"Firepit2" ,prompt: "Create a modern outdoor firepit with clean lines and a simple, plain background. No people."),
+        Object(name: "Bench", selectedImage: "Bench", unSelectedImage:"Bench2" ,prompt: "Create a wooden or metal garden bench centered with a clean, minimal background. No people."),
     ]
     
     var body: some View {
@@ -86,6 +86,9 @@ struct addObjectView: View {
                                                         .stroke(.appBlack.opacity(0.2), lineWidth: 1)
                                                 }
                                             }
+                                            .cornerRadius(10)
+                                            .clipped()
+                                            .contentShape(RoundedRectangle(cornerRadius: 10))
                                         
                                         if isSelected {
                                             
@@ -113,9 +116,9 @@ struct addObjectView: View {
                                     }
                                     
                                     Text(object.name)
-                                        .font(FontManager.generalSansRegularFont(size: .scaledFontSize(14)))
+                                        .font( isSelected ? FontManager.generalSansMediumFont(size: .scaledFontSize(14)) : FontManager.generalSansRegularFont(size: .scaledFontSize(14)))
                                         .multilineTextAlignment(.center)
-                                        .foregroundColor(Color.appBlack.opacity(0.5))
+                                        .foregroundColor(isSelected ? Color.appBlack : Color.appBlack.opacity(0.5))
                             
                                     
                                 }

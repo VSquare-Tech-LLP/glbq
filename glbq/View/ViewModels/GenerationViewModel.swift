@@ -30,6 +30,7 @@ final class GenerationViewModel: ObservableObject {
     func startJob(venueImage: UIImage, referenceImage: UIImage) async -> Bool {
         errorMessage = nil
         shouldReturnToRecreate = false
+        shouldNavigateToResult = false  // ✅ ADD THIS LINE
         do {
             let prompt = """
             Transform the provided garden photo using the reference garden's design, landscaping, and plant arrangements.
@@ -60,6 +61,7 @@ final class GenerationViewModel: ObservableObject {
     func startDesignJob(image: UIImage, prompt: String) async -> Bool {
         errorMessage = nil
         shouldReturnToRecreate = false
+        shouldNavigateToResult = false  // ✅ ADD THIS LINE
         do {
             let resp = try await network.uploadDesign(image: image, prompt: prompt)
             guard resp.status, let id = resp.data?.id else {
@@ -78,6 +80,7 @@ final class GenerationViewModel: ObservableObject {
     func startTextJob(prompt: String) async -> Bool {
         errorMessage = nil
         shouldReturnToRecreate = false
+        shouldNavigateToResult = false  // ✅ ADD THIS LINE
         do {
             let resp = try await network.uploadTextToImage(prompt: prompt)
             guard resp.status, let id = resp.data?.id else {
@@ -96,6 +99,7 @@ final class GenerationViewModel: ObservableObject {
     func startAddObjectJob(venue: UIImage, object: UIImage?, prompt: String) async -> Bool {
         errorMessage = nil
         shouldReturnToRecreate = false
+        shouldNavigateToResult = false  // ✅ ADD THIS LINE
         do {
             let resp: ImageUploadResponse
             if let object = object {

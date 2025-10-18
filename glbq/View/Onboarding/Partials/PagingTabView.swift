@@ -79,7 +79,7 @@ struct PagingTabView<Content: View>: View {
             
                 })
                 {
-                    Text("Continue")
+                    Text(selectedIndex == 0 ? "Get Started" : "Continue")
                       .font(FontManager.generalSansMediumFont(size: .scaledFontSize(18)))
                       .multilineTextAlignment(.center)
                       .foregroundColor(.white)
@@ -98,8 +98,12 @@ struct PagingTabView<Content: View>: View {
             
 
         }
-        .background(Color.primaryApp)
-        .edgesIgnoringSafeArea(.all)
+        .background {
+            Image(.appBg)
+                .resizable()
+                .frame(maxWidth: .infinity,maxHeight: .infinity)
+        }
+        .ignoresSafeArea(.all)
     }
 }
 

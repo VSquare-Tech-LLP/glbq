@@ -64,12 +64,12 @@ struct HistoryTopView: View {
                         .cornerRadius(10)
                     }
                     .popoverView(isPresented: $isDropdownOpen ,
-                                 popOverSize: CGSize(width: isIPad ? ScaleUtility.scaledSpacing(174) : ScaleUtility.scaledSpacing(113),
-                                                     height: isIPad ? ScaleUtility.scaledSpacing(90) : ScaleUtility.scaledSpacing(74)),
+                                 popOverSize: CGSize(width: isIPad ? ScaleUtility.scaledSpacing(170) : ScaleUtility.scaledSpacing(113),
+                                                     height: isIPad ? ScaleUtility.scaledSpacing(84) : ScaleUtility.scaledSpacing(74)),
                                  popoverOffsetX: ScaleUtility.scaledSpacing(-15),
                                  popoverIpadOffsetX:  ScaleUtility.scaledSpacing(-15),
                                  popoverOffsetY: ScaleUtility.scaledSpacing(40),
-                                 popoverIpadOffsetY: ScaleUtility.scaledSpacing(30),
+                                 popoverIpadOffsetY: ScaleUtility.scaledSpacing(40),
                                  popoverContent: {
                         
                         VStack(spacing: ScaleUtility.scaledSpacing(6)) {

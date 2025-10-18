@@ -35,13 +35,15 @@ struct OnboardingView: View {
                     
                     Image(.leftGrassIcon)
                         .resizable()
-                        .frame(width: ScaleUtility.scaledValue(51),height: ScaleUtility.scaledValue(214))
+                        .frame(width: isIPad ?  ScaleUtility.scaledValue(75) : ScaleUtility.scaledValue(51),
+                               height:  isIPad ?  ScaleUtility.scaledValue(321) : ScaleUtility.scaledValue(214))
                     
                     Spacer()
                     
                     Image(.rightGrassIcon)
                         .resizable()
-                        .frame(width: ScaleUtility.scaledValue(51),height: ScaleUtility.scaledValue(214))
+                        .frame(width: isIPad ?  ScaleUtility.scaledValue(75) : ScaleUtility.scaledValue(51),
+                               height:  isIPad ?  ScaleUtility.scaledValue(321) : ScaleUtility.scaledValue(214))
                     
                 }
                 .offset(y: ScaleUtility.scaledSpacing(-20))
@@ -49,13 +51,24 @@ struct OnboardingView: View {
             
             Spacer()
         }
-        .overlay(alignment: currentScreenIndex == 5 ? .center : .bottom) {
+        .overlay(alignment: .bottom) {
             
-            Image(imageName)
-                .resizable(size: CGSize(
-                    width: isIPad ? 750 * ipadWidthRatio : ScaleUtility.scaledValue(375) ,
-                    height: currentScreenIndex == 5 ? ScaleUtility.scaledValue(408) : isIPad ? 1008 * ipadHeightRatio : ScaleUtility.scaledValue(632.9972534179688) ))
-                .offset(y: currentScreenIndex == 5 ? 0 : ScaleUtility.scaledSpacing(30))
+            ZStack {
+                
+                Image(imageName)
+                    .resizable(size: CGSize(
+                        width: isIPad ? 750 * ipadWidthRatio : ScaleUtility.scaledValue(375) ,
+                        height: isIPad ? 1148 * ipadHeightRatio : ScaleUtility.scaledValue(612) ))
+                    .offset(y: ScaleUtility.scaledSpacing(40))
+                
+                
+                Image(.overlayImg)
+                    .resizable()
+                    .frame( height: isIPad ? 1148 * ipadHeightRatio : ScaleUtility.scaledValue(612))
+                    .frame(maxWidth: .infinity)
+                    .offset(y: ScaleUtility.scaledSpacing(40))
+                
+            }
         }
     }
 }

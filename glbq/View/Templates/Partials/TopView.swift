@@ -45,7 +45,7 @@ struct TopView: View {
                 Image(.topBg)
                     .resizable()
                     .frame(maxWidth: .infinity)
-                    .frame(height: ScaleUtility.scaledValue(235))
+                    .frame(height: isIPad ? ScaleUtility.scaledValue(285) : ScaleUtility.scaledValue(235))
                 
                 
                 VStack(spacing: ScaleUtility.scaledSpacing(15)) {
@@ -129,11 +129,12 @@ struct TopView: View {
                                         
                                         Text(tool.name)
                                             .font(FontManager.generalSansMediumFont(size: .scaledFontSize(12)))
-                                            .foregroundColor(.white)
+                                            .foregroundColor(.primaryApp)
                                         
                                         
                                     }
-                                    .frame(width: ScaleUtility.scaledValue(132), height: ScaleUtility.scaledValue(85))
+                                    .frame(width: isIPad ? ScaleUtility.scaledValue(198) : ScaleUtility.scaledValue(132),
+                                           height: isIPad ? ScaleUtility.scaledValue(127) : ScaleUtility.scaledValue(85))
                                     .background(Color.primaryApp.opacity(0.1))
                                     .cornerRadius(10)
                                     .overlay(

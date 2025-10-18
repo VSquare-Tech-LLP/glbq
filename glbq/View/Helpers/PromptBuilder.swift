@@ -39,7 +39,7 @@ enum PromptBuilder {
         "Furniture": "Create elegant outdoor furniture including a chair and table with a clean, minimal background. No people.",
         "Gazebo": "Create a beautiful wooden gazebo with detailed structure and a plain background. No people.",
         "Fountain": "Create a classic water fountain with clear details and a simple, clean background. No people.",
-        "Pathway": "Create a stone or tile garden pathway viewed from above with a plain neutral background. No people.",
+        "Hammock": "A realistic image of a modern outdoor hammock (with or without stand), isolated on a clean plain background. The hammock should be the only object, centered, clean, and well-lit. No background, trees, or people.",
         "Trees": "Create a realistic tree with full green foliage and a clean white background. No people.",
         "Lights": "Create decorative garden lights or lanterns with a clear, minimal background. No people.",
         "Firepit": "Create a modern outdoor firepit with clean lines and a simple, plain background. No people.",

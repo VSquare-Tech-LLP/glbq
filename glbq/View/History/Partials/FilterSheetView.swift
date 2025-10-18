@@ -32,7 +32,7 @@ struct FilterSheetView: View {
                 .background(Color.accent)
                 .foregroundColor(Color.clear)
                 .frame(width: ScaleUtility.scaledValue(56), height: ScaleUtility.scaledValue(3))
-                .padding(.top, ScaleUtility.scaledSpacing(40))
+                .padding(.top, isIPad ?  ScaleUtility.scaledSpacing(20) : ScaleUtility.scaledSpacing(40))
             
             Spacer()
                 .frame(height: ScaleUtility.scaledSpacing(10))

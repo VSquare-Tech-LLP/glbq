@@ -20,39 +20,39 @@ struct GardenTypeView: View {
     var GardenTypes: [GardenType] = [
         
         GardenType(name: "House",
-              imageName: "dummyImage1",
+              imageName: "House",
               prompt: "Create a beautiful front yard garden in front of a modern house with a lawn, flower beds, and a stone walkway leading to the entrance. No people."),
         
         GardenType(name: "Apartment",
-              imageName: "dummyImage1",
+              imageName: "Apartment",
               prompt: "Create a cozy apartment balcony garden with potted plants, hanging flowers, a small chair, and city views in the background. No people."),
         
         GardenType(name: "Office",
-            imageName: "dummyImage1",
+            imageName: "Office",
             prompt: "Create a clean office courtyard garden with trimmed plants, benches, modern planters, and glass building reflections around. No people."),
         
         GardenType(name: "Café",
-            imageName: "dummyImage1",
+            imageName: "Café",
             prompt: "Create a charming café outdoor garden with tables, string lights, potted flowers, and a warm, inviting atmosphere. No people."),
         
         GardenType(name: "Rooftop",
-            imageName: "dummyImage1",
+            imageName: "Rooftop",
             prompt: "Create a stylish rooftop garden with wooden decking, lounge furniture, green plants, and a panoramic city skyline view. No people."),
         
         GardenType(name: "Resort",
-            imageName: "dummyImage1",
+            imageName: "Resort",
             prompt: "Create a tropical resort garden with palm trees, a swimming pool, deck chairs, and a luxury vacation ambience. No people."),
         
         GardenType(name: "Park",
-            imageName: "dummyImage1",
+            imageName: "Park",
             prompt: "Create a spacious park landscape with open green lawns, trees, walking paths, benches, and sunlight filtering through leaves. No people."),
         
         GardenType(name: "Villa",
-            imageName: "dummyImage1",
+            imageName: "Villa",
             prompt: "Create an elegant villa garden with a marble pathway, fountain in the center, trimmed hedges, and luxury outdoor furniture. No people."),
         
         GardenType(name: "Backyard",
-            imageName: "dummyImage1",
+            imageName: "Backyard",
             prompt: "Create a cozy backyard garden with grass, a wooden fence, patio furniture, and flower beds along the sides. No people."),
         
     ]
@@ -89,21 +89,21 @@ struct GardenTypeView: View {
                                 }) {
                                     ZStack {
                                      
-                                            RoundedRectangle(cornerRadius: 13)
+                                            RoundedRectangle(cornerRadius: 10)
                                                 .frame(width: isIPad ?  ScaleUtility.scaledValue(210) : ScaleUtility.scaledValue(140),
                                                        height: isIPad ? ScaleUtility.scaledValue(139) : ScaleUtility.scaledValue(93))
                                                 .foregroundColor(Color.clear)
                                                 .background(selectedType == type.name ? Color.primaryApp : Color.clear)
                                                 .overlay {
                                                     if selectedType == type.name {
-                                                        RoundedRectangle(cornerRadius: 13)
+                                                        RoundedRectangle(cornerRadius: 10)
                                                             .stroke(Color.accent, lineWidth: 5)
                                                             .frame(width: isIPad ?  ScaleUtility.scaledValue(210) : ScaleUtility.scaledValue(140),
                                                                    height: isIPad ? ScaleUtility.scaledValue(139) : ScaleUtility.scaledValue(93))
                                                     }
                                                     
                                                 }
-                                                .cornerRadius(13)
+                                                .cornerRadius(10)
                                         
                                         
                                         Image(type.imageName)
@@ -116,7 +116,9 @@ struct GardenTypeView: View {
                                                     .inset(by: -0.5)
                                                     .stroke(.appBlack.opacity(0.2), lineWidth: 1)
                                             }
-                                        
+                                            .cornerRadius(10)
+                                            .clipped()
+                                            .contentShape(RoundedRectangle(cornerRadius: 10))
                                     }
                                     
                                 }

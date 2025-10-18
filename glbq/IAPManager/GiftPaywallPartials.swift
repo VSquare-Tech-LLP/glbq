@@ -121,13 +121,14 @@ struct GiftPaywallBottomView: View {
                             
                             Image(.tagIcon)
                                 .resizable()
-                                .frame(width: ScaleUtility.scaledValue(80), height: ScaleUtility.scaledValue(80))
+                                .frame(width: isIPad ? ScaleUtility.scaledValue(120) : ScaleUtility.scaledValue(80),
+                                       height:  isIPad ? ScaleUtility.scaledValue(120) :  ScaleUtility.scaledValue(80))
                                 .opacity(0.5)
                                 .offset(x: ScaleUtility.scaledSpacing(-5),y: ScaleUtility.scaledSpacing(-5))
                             
                         }
                         .padding(.all, ScaleUtility.scaledSpacing(15))
-                        .frame(height: ScaleUtility.scaledValue(157))
+                        .frame(height: isIPad ?  ScaleUtility.scaledValue(235) : ScaleUtility.scaledValue(157))
                         .background(Color.accent.opacity(0.2))
                         .cornerRadius(15)
                         .overlay(
